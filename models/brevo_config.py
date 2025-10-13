@@ -262,6 +262,17 @@ class BrevoConfig(models.Model):
                 }
             }
 
+    def action_open_field_discovery(self):
+        """Open Field Discovery window"""
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Field Discovery',
+            'res_model': 'brevo.field.discovery',
+            'view_mode': 'list,form',
+            'target': 'new',
+            'context': {'search_default_unmapped': 1}
+        }
+
     def manual_sync_contacts(self):
         """Trigger manual synchronization of contacts"""
         try:
