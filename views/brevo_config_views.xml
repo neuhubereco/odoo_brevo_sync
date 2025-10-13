@@ -98,10 +98,9 @@
                         </h1>
                     </div>
                     <group>
-                        <group string="Brevo Information">
-                            <field name="brevo_id"/>
-                            <field name="folder_id"/>
-                            <field name="description"/>
+                        <group string="Odoo Mapping">
+                            <field name="partner_category_id"/>
+                            <field name="brevo_id" invisible="1"/>
                         </group>
                         <group string="Statistics">
                             <field name="unique_subscribers"/>
@@ -109,8 +108,9 @@
                             <field name="total_unsubscribers"/>
                         </group>
                     </group>
-                    <group string="Odoo Mapping">
-                        <field name="partner_category_ids" widget="many2many_tags"/>
+                    <group string="Brevo Information">
+                        <field name="folder_id"/>
+                        <field name="description"/>
                     </group>
                     <group string="Sync Information">
                         <group>
@@ -133,11 +133,12 @@
         <field name="arch" type="xml">
             <list string="Brevo Contact Lists">
                 <field name="name"/>
-                <field name="brevo_id"/>
+                <field name="partner_category_id"/>
                 <field name="unique_subscribers"/>
                 <field name="sync_status"/>
                 <field name="last_sync"/>
                 <field name="active"/>
+                <field name="brevo_id" invisible="1"/>
             </list>
         </field>
     </record>

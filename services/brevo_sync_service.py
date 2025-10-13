@@ -115,6 +115,18 @@ class BrevoSyncService:
                 'website': attributes.get('WEBSITE', ''),
             }
             
+            # Handle Brevo lists (map to Odoo categories)
+            list_ids = brevo_contact.get('listIds', [])
+            if list_ids:
+                # Find corresponding Odoo categories for Brevo lists
+                brevo_lists = self.env['brevo.contact.list'].search([
+                    ('brevo_id', 'in', [str(lid) for lid in list_ids])
+                ])
+                if brevo_lists:
+                    category_ids = brevo_lists.mapped('partner_category_id.id')
+                    if category_ids:
+                        partner_vals['category_id'] = [(6, 0, category_ids)]
+            
             # Handle country if available
             country_name = attributes.get('COUNTRY')
             if country_name:
@@ -195,6 +207,21 @@ class BrevoSyncService:
                         if state:
                             update_vals['state_id'] = state.id
             
+            # Handle Brevo lists (map to Odoo categories)
+            list_ids = brevo_contact.get('listIds', [])
+            if list_ids:
+                # Find corresponding Odoo categories for Brevo lists
+                brevo_lists = self.env['brevo.contact.list'].search([
+                    ('brevo_id', 'in', [str(lid) for lid in list_ids])
+                ])
+                if brevo_lists:
+                    category_ids = brevo_lists.mapped('partner_category_id.id')
+                    if category_ids:
+                        # Merge with existing categories
+                        existing_categories = partner.category_id.ids
+                        all_categories = list(set(existing_categories + category_ids))
+                        update_vals['category_id'] = [(6, 0, all_categories)]
+            
             # Apply updates
             partner.write(update_vals)
             
@@ -239,13 +266,96 @@ class BrevoSyncService:
             return {'success': False, 'error': str(e)}
     
     def sync_lists(self) -> Dict[str, Any]:
-        """Synchronize lists between Odoo and Brevo"""
+        """Synchronize Brevo lists to Odoo partner categories (tags)"""
         try:
-            # Implementation for list sync
-            # This would contain the existing list sync logic
-            return {'success': True, 'message': 'Lists synchronized successfully'}
+            _logger.info("Starting list synchronization...")
+            
+            # Get lists from Brevo
+            brevo_lists_result = self.brevo_service.get_lists()
+            if not brevo_lists_result.get('success'):
+                raise Exception(f"Failed to get lists from Brevo: {brevo_lists_result.get('error')}")
+            
+            brevo_lists = brevo_lists_result.get('lists', [])
+            _logger.info(f"Found {len(brevo_lists)} lists in Brevo")
+            
+            synced_count = 0
+            error_count = 0
+            
+            # Process each Brevo list
+            for brevo_list in brevo_lists:
+                try:
+                    list_id = brevo_list.get('id')
+                    list_name = brevo_list.get('name')
+                    
+                    if not list_id or not list_name:
+                        continue
+                    
+                    # Check if category already exists
+                    category = self.env['res.partner.category'].search([
+                        ('name', '=', list_name)
+                    ], limit=1)
+                    
+                    if not category:
+                        # Create new category
+                        category = self.env['res.partner.category'].create({
+                            'name': list_name,
+                        })
+                        _logger.info(f"Created new category: {list_name}")
+                    else:
+                        _logger.info(f"Category already exists: {list_name}")
+                    
+                    # Create or update brevo.contact.list record
+                    brevo_list_record = self.env['brevo.contact.list'].search([
+                        ('brevo_id', '=', str(list_id))
+                    ], limit=1)
+                    
+                    if not brevo_list_record:
+                        brevo_list_record = self.env['brevo.contact.list'].create({
+                            'name': list_name,
+                            'brevo_id': str(list_id),
+                            'partner_category_id': category.id,
+                            'unique_subscribers': brevo_list.get('uniqueSubscribers', 0),
+                            'company_id': self.config.company_id.id,
+                        })
+                        _logger.info(f"Created brevo.contact.list record: {list_name}")
+                    else:
+                        # Update existing record
+                        brevo_list_record.write({
+                            'name': list_name,
+                            'partner_category_id': category.id,
+                            'unique_subscribers': brevo_list.get('uniqueSubscribers', 0),
+                        })
+                        _logger.info(f"Updated brevo.contact.list record: {list_name}")
+                    
+                    synced_count += 1
+                    
+                except Exception as e:
+                    error_count += 1
+                    _logger.error(f"Failed to sync list {brevo_list.get('name', 'unknown')}: {str(e)}")
+                    self.env['brevo.sync.log'].log_error(
+                        'sync_list', 'brevo_to_odoo', f"Failed to sync list {brevo_list.get('name', 'unknown')}",
+                        error_message=str(e), brevo_id=brevo_list.get('id'), config_id=self.config.id
+                    )
+            
+            # Update sync status
+            self.config.last_sync_lists = fields.Datetime.now()
+            self.config.sync_status = 'success'
+            self.config.error_message = False
+            
+            message = f"List sync completed. Synced: {synced_count}, Errors: {error_count}"
+            _logger.info(message)
+            
+            return {
+                'success': True, 
+                'message': message,
+                'synced_count': synced_count,
+                'error_count': error_count
+            }
+            
         except Exception as e:
             _logger.error(f"List sync failed: {str(e)}")
+            self.config.sync_status = 'error'
+            self.config.error_message = str(e)
             return {'success': False, 'error': str(e)}
     
     def sync_tags(self) -> Dict[str, Any]:
