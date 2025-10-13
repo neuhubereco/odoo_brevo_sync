@@ -130,14 +130,14 @@
         <field name="name">brevo.contact.list.tree</field>
         <field name="model">brevo.contact.list</field>
         <field name="arch" type="xml">
-            <tree string="Brevo Contact Lists">
+            <list string="Brevo Contact Lists">
                 <field name="name"/>
                 <field name="brevo_id"/>
                 <field name="unique_subscribers"/>
                 <field name="sync_status"/>
                 <field name="last_sync"/>
                 <field name="active"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -164,7 +164,7 @@
         <field name="name">brevo.sync.log.tree</field>
         <field name="model">brevo.sync.log</field>
         <field name="arch" type="xml">
-            <tree string="Brevo Sync Logs" decoration-success="status == 'success'" decoration-danger="status == 'error'" decoration-warning="status == 'warning'">
+            <list string="Brevo Sync Logs" decoration-success="status == 'success'" decoration-danger="status == 'error'" decoration-warning="status == 'warning'">
                 <field name="create_date"/>
                 <field name="operation"/>
                 <field name="direction"/>
@@ -174,7 +174,7 @@
                 <field name="contact_list_id"/>
                 <field name="lead_id"/>
                 <field name="duration"/>
-            </tree>
+            </list>
         </field>
     </record>
 
