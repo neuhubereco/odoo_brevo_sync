@@ -5,6 +5,12 @@ from odoo import api, SUPERUSER_ID
 
 _logger = logging.getLogger(__name__)
 
+# Import all submodules
+from . import models
+from . import controllers
+from . import wizards
+from . import services
+
 
 def post_init_hook(cr, registry):
     """Post-installation hook to set up initial configuration"""

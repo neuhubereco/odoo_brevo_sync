@@ -50,9 +50,8 @@ Technical Details:
         'python': ['brevo-python'],
     },
     'data': [
-        'data/ir_model_data.xml',
-        'security/brevo_security.xml',
         'security/ir.model.access.csv',
+        'security/brevo_security.xml',
         'data/ir_cron_data.xml',
         'data/ir_config_parameter_data.xml',
         'views/brevo_config_views.xml',
