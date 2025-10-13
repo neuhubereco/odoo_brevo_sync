@@ -47,7 +47,7 @@ Technical Details:
         'mail',
     ],
     'external_dependencies': {
-        'python': ['sib-api-v3-sdk'],
+        'python': ['brevo-python'],
     },
     'data': [
         'security/ir.model.access.csv',

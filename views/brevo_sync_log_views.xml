@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Brevo Sync Log Views -->
+    <record id="view_brevo_sync_log_tree" model="ir.ui.view">
+        <field name="name">brevo.sync.log.tree</field>
+        <field name="model">brevo.sync.log</field>
+        <field name="arch" type="xml">
+            <tree string="Brevo Sync Logs" decoration-success="status == 'success'" decoration-danger="status == 'error'" decoration-warning="status == 'warning'">
+                <field name="create_date"/>
+                <field name="operation"/>
+                <field name="direction"/>
+                <field name="status"/>
+                <field name="message"/>
+                <field name="partner_id"/>
+                <field name="contact_list_id"/>
+                <field name="lead_id"/>
+                <field name="duration"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_brevo_sync_log_form" model="ir.ui.view">
+        <field name="name">brevo.sync.log.form</field>
+        <field name="model">brevo.sync.log</field>
+        <field name="arch" type="xml">
+            <form string="Brevo Sync Log">
+                <header>
+                    <button name="action_view_related_record" string="View Related Record" type="object" class="btn-primary" attrs="{'invisible': [('partner_id', '=', False), ('contact_list_id', '=', False), ('lead_id', '=', False)]}"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Operation Details">
+                            <field name="operation"/>
+                            <field name="direction"/>
+                            <field name="status"/>
+                            <field name="message"/>
+                        </group>
+                        <group string="Timing">
+                            <field name="start_time"/>
+                            <field name="end_time"/>
+                            <field name="duration"/>
+                        </group>
+                    </group>
+                    <group string="Related Records">
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="contact_list_id"/>
+                            <field name="lead_id"/>
+                        </group>
+                        <group>
+                            <field name="brevo_id"/>
+                            <field name="brevo_email"/>
+                        </group>
+                    </group>
+                    <group string="Additional Information">
+                        <field name="error_message" readonly="1"/>
+                        <field name="details" widget="ace" options="{'mode': 'json'}" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_brevo_sync_log_search" model="ir.ui.view">
+        <field name="name">brevo.sync.log.search</field>
+        <field name="model">brevo.sync.log</field>
+        <field name="arch" type="xml">
+            <search string="Search Brevo Sync Logs">
+                <field name="operation"/>
+                <field name="direction"/>
+                <field name="status"/>
+                <field name="message"/>
+                <field name="partner_id"/>
+                <field name="contact_list_id"/>
+                <field name="lead_id"/>
+                <filter string="Success" name="success" domain="[('status', '=', 'success')]"/>
+                <filter string="Error" name="error" domain="[('status', '=', 'error')]"/>
+                <filter string="Warning" name="warning" domain="[('status', '=', 'warning')]"/>
+                <filter string="Today" name="today" domain="[('create_date', '>=', datetime.datetime.combine(context_today(), datetime.time(0,0,0)))]"/>
+                <filter string="This Week" name="this_week" domain="[('create_date', '>=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Operation" name="group_operation" context="{'group_by': 'operation'}"/>
+                    <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
+                    <filter string="Date" name="group_date" context="{'group_by': 'create_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+</odoo>

@@ -1,8 +1,8 @@
 # Brevo Connector Requirements
 # ============================
 
-# Brevo API SDK
-sib-api-v3-sdk>=7.6.0
+# Brevo API SDK (updated to new package name)
+brevo-python>=1.0.0
 
 # Additional dependencies for enhanced functionality
 requests>=2.25.0
