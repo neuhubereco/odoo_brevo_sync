@@ -37,8 +37,8 @@ Technical Details:
 - Configurable field mappings
 - Comprehensive error handling and logging
     """,
-    'author': 'Your Company',
-    'website': 'https://www.yourcompany.com',
+    'author': 'Florian Neuhuber',
+    'website': 'https://www.neuhuber.group',
     'license': 'AGPL-3',
     'depends': [
         'base',
