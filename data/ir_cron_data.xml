@@ -31,7 +31,6 @@ for config in configs:
         </field>
         <field name="interval_number">15</field>
         <field name="interval_type">minutes</field>
-        <field name="numbercall">-1</field>
         <field name="active">True</field>
         <field name="user_id" ref="base.user_root"/>
     </record>
@@ -66,7 +65,6 @@ for config in configs:
         </field>
         <field name="interval_number">30</field>
         <field name="interval_type">minutes</field>
-        <field name="numbercall">-1</field>
         <field name="active">True</field>
         <field name="user_id" ref="base.user_root"/>
     </record>
@@ -82,7 +80,6 @@ logs.cleanup_old_logs(days=30)
         </field>
         <field name="interval_number">1</field>
         <field name="interval_type">days</field>
-        <field name="numbercall">-1</field>
         <field name="active">True</field>
         <field name="user_id" ref="base.user_root"/>
     </record>
