@@ -41,6 +41,22 @@ class ResPartner(models.Model):
         help='Additional attributes stored in Brevo (JSON format)'
     )
     
+    # Dynamic Brevo Fields (will be created at runtime)
+    brevo_dynamic_fields = fields.Text(
+        string='Brevo Dynamic Fields',
+        help='JSON storage for dynamically created Brevo fields'
+    )
+    
+    # Brevo Tags
+    brevo_tags = fields.Many2many(
+        'res.partner.category',
+        'partner_brevo_tag_rel',
+        'partner_id',
+        'category_id',
+        string='Brevo Tags',
+        help='Tags synchronized from Brevo'
+    )
+    
     brevo_lists = fields.Many2many(
         'brevo.contact.list',
         'partner_brevo_list_rel',

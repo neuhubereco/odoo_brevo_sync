@@ -308,3 +308,39 @@ class BrevoConfig(models.Model):
             _logger.error(f"Brevo list sync cron failed for config {self.id}: {str(e)}")
             self.sync_status = 'error'
             self.error_message = str(e)
+
+    def action_sync_tags(self):
+        """Method for cron job to sync tags"""
+        try:
+            from ..services.brevo_sync_service import BrevoSyncService
+            sync_service = BrevoSyncService(self)
+            result = sync_service.sync_tags()
+            
+            if result.get('success'):
+                self.sync_status = 'success'
+                self.error_message = False
+            else:
+                self.sync_status = 'error'
+                self.error_message = result.get('error', 'Unknown error')
+        except Exception as e:
+            _logger.error(f"Brevo tag sync cron failed for config {self.id}: {str(e)}")
+            self.sync_status = 'error'
+            self.error_message = str(e)
+
+    def action_sync_dynamic_fields(self):
+        """Method for cron job to sync dynamic fields"""
+        try:
+            from ..services.brevo_sync_service import BrevoSyncService
+            sync_service = BrevoSyncService(self)
+            result = sync_service.sync_dynamic_fields()
+            
+            if result.get('success'):
+                self.sync_status = 'success'
+                self.error_message = False
+            else:
+                self.sync_status = 'error'
+                self.error_message = result.get('error', 'Unknown error')
+        except Exception as e:
+            _logger.error(f"Brevo dynamic fields sync cron failed for config {self.id}: {str(e)}")
+            self.sync_status = 'error'
+            self.error_message = str(e)

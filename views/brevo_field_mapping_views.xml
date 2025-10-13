@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Brevo Field Mapping Views -->
+    <record id="view_brevo_field_mapping_tree" model="ir.ui.view">
+        <field name="name">brevo.field.mapping.tree</field>
+        <field name="model">brevo.field.mapping</field>
+        <field name="arch" type="xml">
+            <list string="Brevo Field Mappings">
+                <field name="name"/>
+                <field name="brevo_field_name"/>
+                <field name="odoo_field_name"/>
+                <field name="field_type"/>
+                <field name="is_required"/>
+                <field name="is_readonly"/>
+                <field name="active"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_brevo_field_mapping_form" model="ir.ui.view">
+        <field name="name">brevo.field.mapping.form</field>
+        <field name="model">brevo.field.mapping</field>
+        <field name="arch" type="xml">
+            <form string="Brevo Field Mapping">
+                <header>
+                    <button name="create_odoo_field" string="Create Odoo Field" type="object" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Field Mapping Name"/>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <group string="Field Information">
+                            <field name="name"/>
+                            <field name="brevo_field_name"/>
+                            <field name="odoo_field_name"/>
+                            <field name="field_type"/>
+                        </group>
+                        <group string="Field Properties">
+                            <field name="is_required"/>
+                            <field name="is_readonly"/>
+                            <field name="active"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Field Configuration">
+                        <group>
+                            <field name="default_value"/>
+                            <field name="help_text"/>
+                        </group>
+                        <group>
+                            <field name="many2one_model" invisible="field_type != 'many2one'"/>
+                            <field name="many2many_model" invisible="field_type != 'many2many'"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Selection Values" invisible="field_type != 'selection'">
+                        <field name="selection_values" widget="text" placeholder='[["value1", "Label 1"], ["value2", "Label 2"]]'/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_brevo_field_mapping_search" model="ir.ui.view">
+        <field name="name">brevo.field.mapping.search</field>
+        <field name="model">brevo.field.mapping</field>
+        <field name="arch" type="xml">
+            <search string="Search Brevo Field Mappings">
+                <field name="name"/>
+                <field name="brevo_field_name"/>
+                <field name="odoo_field_name"/>
+                <field name="field_type"/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
+                <filter string="Required" name="required" domain="[('is_required', '=', True)]"/>
+                <filter string="Read Only" name="readonly" domain="[('is_readonly', '=', True)]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Field Type" name="group_type" context="{'group_by': 'field_type'}"/>
+                    <filter string="Company" name="group_company" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Actions -->
+    <record id="action_brevo_field_mapping" model="ir.actions.act_window">
+        <field name="name">Brevo Field Mappings</field>
+        <field name="res_model">brevo.field.mapping</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_brevo_field_mapping_search"/>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Brevo Field Mappings found.
+            </p><p>
+                Create field mappings to synchronize Brevo contact attributes with Odoo partner fields.
+            </p>
+        </field>
+    </record>
+
+</odoo>

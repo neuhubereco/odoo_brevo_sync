@@ -34,6 +34,7 @@ class BrevoService:
         self.contacts_api = brevo_python.ContactsApi(brevo_python.ApiClient(self.configuration))
         self.lists_api = brevo_python.ContactsApi(brevo_python.ApiClient(self.configuration))
         self.webhooks_api = brevo_python.WebhooksApi(brevo_python.ApiClient(self.configuration))
+        self.attributes_api = brevo_python.AttributesApi(brevo_python.ApiClient(self.configuration))
         
         # Rate limiting
         self.last_request_time = 0
@@ -472,6 +473,96 @@ class BrevoService:
             }
         except Exception as e:
             _logger.error(f"Failed to delete Brevo webhook: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e),
+            }
+    
+    def get_contact_tags(self, contact_id: str) -> Dict[str, Any]:
+        """Get tags for a specific contact"""
+        try:
+            self._rate_limit()
+            response = self.contacts_api.get_contact_info(contact_id)
+            
+            if hasattr(response, 'tags') and response.tags:
+                return {
+                    'success': True,
+                    'tags': response.tags
+                }
+            else:
+                return {
+                    'success': True,
+                    'tags': []
+                }
+        except ApiException as e:
+            _logger.error(f"Failed to get contact tags: {e}")
+            return {
+                'success': False,
+                'error': f"API Error {e.status}: {e.reason}",
+            }
+        except Exception as e:
+            _logger.error(f"Failed to get contact tags: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e),
+            }
+    
+    def update_contact_tags(self, contact_id: str, tags: List[str]) -> Dict[str, Any]:
+        """Update tags for a specific contact"""
+        try:
+            self._rate_limit()
+            
+            # Create update contact request
+            update_contact = brevo_python.UpdateContact()
+            update_contact.tags = tags
+            
+            response = self.contacts_api.update_contact(contact_id, update_contact)
+            
+            return {
+                'success': True,
+                'message': 'Contact tags updated successfully'
+            }
+        except ApiException as e:
+            _logger.error(f"Failed to update contact tags: {e}")
+            return {
+                'success': False,
+                'error': f"API Error {e.status}: {e.reason}",
+            }
+        except Exception as e:
+            _logger.error(f"Failed to update contact tags: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e),
+            }
+    
+    def get_all_contact_attributes(self) -> Dict[str, Any]:
+        """Get all available contact attributes from Brevo"""
+        try:
+            self._rate_limit()
+            response = self.attributes_api.get_contact_attributes()
+            
+            attributes = []
+            if hasattr(response, 'attributes') and response.attributes:
+                for attr in response.attributes:
+                    attributes.append({
+                        'name': getattr(attr, 'name', ''),
+                        'type': getattr(attr, 'type', ''),
+                        'enumeration': getattr(attr, 'enumeration', []),
+                        'category': getattr(attr, 'category', ''),
+                    })
+            
+            return {
+                'success': True,
+                'attributes': attributes
+            }
+        except ApiException as e:
+            _logger.error(f"Failed to get contact attributes: {e}")
+            return {
+                'success': False,
+                'error': f"API Error {e.status}: {e.reason}",
+            }
+        except Exception as e:
+            _logger.error(f"Failed to get contact attributes: {str(e)}")
             return {
                 'success': False,
                 'error': str(e),

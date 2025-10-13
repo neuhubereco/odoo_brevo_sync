@@ -18,6 +18,9 @@
                         <group string="Brevo Lists">
                             <field name="brevo_lists" widget="many2many_tags"/>
                         </group>
+                        <group string="Brevo Tags">
+                            <field name="brevo_tags" widget="many2many_tags"/>
+                        </group>
                     </group>
                     <group string="Sync Status">
                         <group>
@@ -55,7 +58,7 @@
         <field name="model">crm.lead</field>
         <field name="inherit_id" ref="crm.crm_lead_view_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//page[@name='description']" position="after">
+            <xpath expr="//notebook" position="inside">
                 <page string="Brevo Integration" name="brevo_integration">
                     <group>
                         <group string="Brevo Information">
