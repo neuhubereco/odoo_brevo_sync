@@ -54,6 +54,12 @@ class BrevoContactList(models.Model):
     )
     
     # Mapping to Odoo partner categories
+    partner_category_id = fields.Many2one(
+        'res.partner.category',
+        string='Partner Category',
+        help='Odoo partner category mapped to this Brevo list'
+    )
+    
     partner_category_ids = fields.Many2many(
         'res.partner.category',
         'brevo_list_category_rel',
