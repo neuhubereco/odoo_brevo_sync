@@ -30,7 +30,7 @@
                         </group>
                     </group>
                     <group string="Field Mappings">
-                        <field name="field_mappings" widget="ace" options="{'mode': 'json'}"/>
+                        <field name="field_mappings" widget="text"/>
                     </group>
                     <group string="Sync Status">
                         <group>
@@ -184,7 +184,7 @@
         <field name="arch" type="xml">
             <form string="Brevo Sync Log">
                 <header>
-                    <button name="action_view_related_record" string="View Related Record" type="object" class="btn-primary" attrs="{'invisible': [('partner_id', '=', False), ('contact_list_id', '=', False), ('lead_id', '=', False)]}"/>
+                    <button name="action_view_related_record" string="View Related Record" type="object" class="btn-primary" invisible="partner_id == False and contact_list_id == False and lead_id == False"/>
                 </header>
                 <sheet>
                     <group>
@@ -213,7 +213,7 @@
                     </group>
                     <group string="Additional Information">
                         <field name="error_message" readonly="1"/>
-                        <field name="details" widget="ace" options="{'mode': 'json'}" readonly="1"/>
+                        <field name="details" widget="text" readonly="1"/>
                     </group>
                 </sheet>
             </form>
@@ -235,8 +235,8 @@
                 <filter string="Success" name="success" domain="[('status', '=', 'success')]"/>
                 <filter string="Error" name="error" domain="[('status', '=', 'error')]"/>
                 <filter string="Warning" name="warning" domain="[('status', '=', 'warning')]"/>
-                <filter string="Today" name="today" domain="[('create_date', '>=', datetime.datetime.combine(context_today(), datetime.time(0,0,0)))]"/>
-                <filter string="This Week" name="this_week" domain="[('create_date', '>=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d'))]"/>
+                <filter string="Today" name="today" domain="[('create_date', '&gt;=', (context_today()).strftime('%Y-%m-%d 00:00:00'))]"/>
+                <filter string="This Week" name="this_week" domain="[('create_date', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
                 <separator/>
                 <group expand="0" string="Group By">
                     <filter string="Operation" name="group_operation" context="{'group_by': 'operation'}"/>

@@ -30,7 +30,7 @@
                         </group>
                     </group>
                     <div class="oe_button_box" name="button_box">
-                        <button name="sync_to_brevo" string="Sync to Brevo" type="object" class="oe_stat_button" icon="fa-sync" attrs="{'invisible': [('brevo_has_email', '=', False)]}"/>
+                        <button name="sync_to_brevo" string="Sync to Brevo" type="object" class="oe_stat_button" icon="fa-sync" invisible="brevo_has_email == False"/>
                     </div>
                 </page>
             </xpath>

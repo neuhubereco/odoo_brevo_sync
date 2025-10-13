@@ -8,9 +8,9 @@
             <form string="Brevo Configuration Setup">
                 <header>
                     <button name="test_connection" string="Test Connection" type="object" class="btn-primary"/>
-                    <button name="setup_webhooks" string="Setup Webhooks" type="object" class="btn-secondary" attrs="{'invisible': [('connection_success', '=', False)]}"/>
-                    <button name="manual_sync_contacts" string="Sync Contacts" type="object" class="btn-secondary" attrs="{'invisible': [('connection_success', '=', False)]}"/>
-                    <button name="manual_sync_lists" string="Sync Lists" type="object" class="btn-secondary" attrs="{'invisible': [('connection_success', '=', False)]}"/>
+                    <button name="setup_webhooks" string="Setup Webhooks" type="object" class="btn-secondary" invisible="connection_success == False"/>
+                    <button name="manual_sync_contacts" string="Sync Contacts" type="object" class="btn-secondary" invisible="connection_success == False"/>
+                    <button name="manual_sync_lists" string="Sync Lists" type="object" class="btn-secondary" invisible="connection_success == False"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -37,7 +37,7 @@
                             <field name="webhook_secret" password="True"/>
                         </group>
                         <group>
-                            <div class="alert alert-info" role="alert" attrs="{'invisible': [('webhooks_enabled', '=', False)]}">
+                            <div class="alert alert-info" role="alert" invisible="webhooks_enabled == False">
                                 <strong>Webhook URL:</strong> <span id="webhook_url_display">Will be generated after configuration</span>
                                 <br/>
                                 <strong>Events:</strong> contact.created, contact.updated, contact.deleted, list.created, list.updated, list.deleted, booking.created, booking.updated, booking.cancelled
@@ -46,11 +46,11 @@
                     </group>
                     
                     <group string="Field Mappings">
-                        <field name="field_mappings" widget="ace" options="{'mode': 'json'}"/>
+                        <field name="field_mappings" widget="text"/>
                         <button name="get_field_mapping_help" string="Field Mapping Help" type="object" class="btn-link"/>
                     </group>
                     
-                    <group string="Connection Test" attrs="{'invisible': [('connection_test_result', '=', False)]}">
+                    <group string="Connection Test" invisible="connection_test_result == False">
                         <field name="connection_success" invisible="1"/>
                         <field name="connection_test_result" widget="text" readonly="1"/>
                     </group>
