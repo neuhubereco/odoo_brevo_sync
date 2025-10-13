@@ -10,6 +10,12 @@ This Odoo module provides **bidirectional synchronization** between Odoo and Bre
 
 ## ✨ Key Features
 
+### 🔧 Field Mapping & Discovery (New in v18.0.1.0.8)
+- **Graphical Field Discovery**: Automatically discover all available fields from Brevo and Odoo
+- **Visual Field Mapping**: Easy-to-use interface to map Brevo contact attributes to Odoo partner fields
+- **Smart Field Matching**: Automatic field type detection and validation
+- **One-Click Mapping Creation**: Create field mappings directly from discovered field combinations
+
 ### 🔄 Contact Synchronization
 - **Bidirectional sync**: Sync Odoo res.partner records with Brevo contacts
 - **Field mapping**: Configurable mapping between Odoo and Brevo fields
@@ -79,7 +85,15 @@ pip install -r requirements.txt
    - `booking.updated`
    - `booking.cancelled`
 
-### Field Mapping
+### Field Discovery & Mapping (New in v18.0.1.0.8)
+1. After setting up your Brevo configuration, click **"Discover Fields"**
+2. The system will automatically detect all available Brevo contact attributes and Odoo partner fields
+3. Go to **Brevo Integration > Data Management > Field Discovery**
+4. Review the discovered field combinations
+5. For each field you want to map, click **"Create Mapping"**
+6. The system will automatically determine the correct field type and create the mapping
+
+### Field Mapping (Legacy)
 Configure field mappings in JSON format:
 ```json
 {

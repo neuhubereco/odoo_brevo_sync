@@ -1,5 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Brevo Field Discovery Views -->
+    <record id="view_brevo_field_discovery_tree" model="ir.ui.view">
+        <field name="name">brevo.field.discovery.tree</field>
+        <field name="model">brevo.field.discovery</field>
+        <field name="arch" type="xml">
+            <list string="Brevo Field Discovery">
+                <field name="brevo_field_name"/>
+                <field name="brevo_field_type"/>
+                <field name="brevo_field_category"/>
+                <field name="odoo_field_name"/>
+                <field name="odoo_field_type"/>
+                <field name="odoo_field_string"/>
+                <field name="is_mapped" widget="boolean"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_brevo_field_discovery_form" model="ir.ui.view">
+        <field name="name">brevo.field.discovery.form</field>
+        <field name="model">brevo.field.discovery</field>
+        <field name="arch" type="xml">
+            <form string="Brevo Field Discovery">
+                <header>
+                    <button name="action_create_mapping" string="Create Mapping" type="object"
+                            class="btn-primary" invisible="is_mapped == True"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="brevo_field_name" readonly="1"/>
+                            <span> → </span>
+                            <field name="odoo_field_name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Brevo Field Information">
+                            <field name="brevo_field_name" readonly="1"/>
+                            <field name="brevo_field_type" readonly="1"/>
+                            <field name="brevo_field_category" readonly="1"/>
+                        </group>
+                        <group string="Odoo Field Information">
+                            <field name="odoo_field_name" readonly="1"/>
+                            <field name="odoo_field_type" readonly="1"/>
+                            <field name="odoo_field_string" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Mapping Status">
+                        <field name="is_mapped" readonly="1"/>
+                        <field name="mapping_id" readonly="1"/>
+                    </group>
+
+                    <group string="Company">
+                        <field name="company_id" groups="base.group_multi_company"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_brevo_field_discovery_search" model="ir.ui.view">
+        <field name="name">brevo.field.discovery.search</field>
+        <field name="model">brevo.field.discovery</field>
+        <field name="arch" type="xml">
+            <search string="Search Brevo Field Discovery">
+                <field name="brevo_field_name"/>
+                <field name="brevo_field_type"/>
+                <field name="brevo_field_category"/>
+                <field name="odoo_field_name"/>
+                <field name="odoo_field_type"/>
+                <filter string="Mapped" name="mapped" domain="[('is_mapped', '=', True)]"/>
+                <filter string="Unmapped" name="unmapped" domain="[('is_mapped', '=', False)]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Brevo Category" name="group_brevo_category" context="{'group_by': 'brevo_field_category'}"/>
+                    <filter string="Odoo Type" name="group_odoo_type" context="{'group_by': 'odoo_field_type'}"/>
+                    <filter string="Company" name="group_company" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action for Field Discovery -->
+    <record id="action_brevo_field_discovery" model="ir.actions.act_window">
+        <field name="name">Brevo Field Discovery</field>
+        <field name="res_model">brevo.field.discovery</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_brevo_field_discovery_search"/>
+        <field name="context">{'search_default_unmapped': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No field discoveries found.
+            </p><p>
+                Use the "Discover Fields" button in the Brevo Configuration to automatically discover all available field combinations between Brevo and Odoo.
+            </p>
+        </field>
+    </record>
+
     <!-- Brevo Field Mapping Views -->
     <record id="view_brevo_field_mapping_tree" model="ir.ui.view">
         <field name="name">brevo.field.mapping.tree</field>

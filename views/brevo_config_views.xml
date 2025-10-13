@@ -8,6 +8,7 @@
             <form string="Brevo Configuration">
                 <header>
                     <button name="test_connection" string="Test Connection" type="object" class="btn-primary"/>
+                    <button name="discover_fields" string="Discover Fields" type="object" class="btn-secondary"/>
                     <button name="manual_sync_contacts" string="Sync Contacts" type="object" class="btn-secondary"/>
                     <button name="manual_sync_lists" string="Sync Lists" type="object" class="btn-secondary"/>
                     <field name="sync_status" widget="statusbar" statusbar_visible="idle,syncing,success,error"/>

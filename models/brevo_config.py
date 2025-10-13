@@ -177,6 +177,76 @@ class BrevoConfig(models.Model):
                 }
             }
 
+    def discover_fields(self):
+        """Discover available fields from Brevo and Odoo"""
+        try:
+            if not self.api_key:
+                raise UserError(_('Please provide a Brevo API Key'))
+
+            from ..services.brevo_service import BrevoService
+            service = BrevoService(self.api_key)
+            result = service.get_all_contact_attributes()
+
+            if not result.get('success'):
+                raise UserError(_('Failed to get Brevo fields: %s') % result.get('error', 'Unknown error'))
+
+            # Get Odoo partner fields
+            odoo_fields = []
+            partner_model = self.env['res.partner']
+            for field_name, field_obj in partner_model._fields.items():
+                if field_obj.type in ['char', 'text', 'integer', 'float', 'boolean', 'date', 'datetime', 'selection', 'many2one', 'many2many']:
+                    odoo_fields.append({
+                        'name': field_name,
+                        'type': field_obj.type,
+                        'string': field_obj.string,
+                    })
+
+            # Update field discovery records
+            for brevo_attr in result.get('attributes', []):
+                for odoo_field in odoo_fields:
+                    # Create discovery record if it doesn't exist
+                    discovery = self.env['brevo.field.discovery'].search([
+                        ('brevo_field_name', '=', brevo_attr['name']),
+                        ('odoo_field_name', '=', odoo_field['name']),
+                        ('company_id', '=', self.company_id.id)
+                    ], limit=1)
+
+                    vals = {
+                        'brevo_field_name': brevo_attr['name'],
+                        'brevo_field_type': brevo_attr.get('type', ''),
+                        'brevo_field_category': brevo_attr.get('category', ''),
+                        'odoo_field_name': odoo_field['name'],
+                        'odoo_field_type': odoo_field['type'],
+                        'odoo_field_string': odoo_field['string'],
+                        'company_id': self.company_id.id,
+                    }
+
+                    if discovery:
+                        discovery.write(vals)
+                    else:
+                        self.env['brevo.field.discovery'].create(vals)
+
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Field Discovery Complete'),
+                    'message': _('Discovered %d field combinations') % len(result.get('attributes', [])) * len(odoo_fields),
+                    'type': 'success',
+                }
+            }
+        except Exception as e:
+            _logger.error(f"Field discovery failed: {str(e)}")
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Field Discovery Failed'),
+                    'message': str(e),
+                    'type': 'danger',
+                }
+            }
+
     def manual_sync_contacts(self):
         """Trigger manual synchronization of contacts"""
         try:

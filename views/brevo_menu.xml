@@ -36,11 +36,17 @@
               action="action_brevo_contact_list" 
               sequence="10"/>
 
-    <menuitem id="menu_brevo_field_mappings" 
-              name="Field Mappings" 
-              parent="menu_brevo_data" 
-              action="action_brevo_field_mapping" 
-              sequence="15"/>
+            <menuitem id="menu_brevo_field_discovery"
+                      name="Field Discovery"
+                      parent="menu_brevo_data"
+                      action="action_brevo_field_discovery"
+                      sequence="12"/>
+
+            <menuitem id="menu_brevo_field_mappings"
+                      name="Field Mappings"
+                      parent="menu_brevo_data"
+                      action="action_brevo_field_mapping"
+                      sequence="15"/>
 
     <menuitem id="menu_brevo_dashboard" 
               name="Dashboard" 
