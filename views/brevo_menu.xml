@@ -69,50 +69,28 @@
 
     <!-- Actions moved to wizards/brevo_config_wizard_views.xml -->
 
-    <!-- Server Actions for Manual Sync -->
+    <!-- Server Actions for Manual Sync - Simplified -->
     <record id="action_brevo_sync_contacts" model="ir.actions.server">
         <field name="name">Sync Contacts to Brevo</field>
-        <field name="model_id" ref="model_res_partner"/>
+        <field name="model_id" ref="model_brevo_config"/>
         <field name="state">code</field>
         <field name="code">
-# Get active configuration
-config = env['brevo.config'].get_active_config()
-if config:
-    from ..services.brevo_sync_service import BrevoSyncService
-    sync_service = BrevoSyncService(config)
-    result = sync_service.sync_contacts()
-    
-    if result.get('success'):
-        log_message = f"Manual sync completed: {result.get('odoo_to_brevo', {}).get('synced_count', 0)} contacts synced to Brevo, {result.get('brevo_to_odoo', {}).get('synced_count', 0)} contacts synced from Brevo"
-    else:
-        log_message = f"Manual sync failed: {result.get('error', 'Unknown error')}"
-    
-    env['brevo.sync.log'].log_info('sync_all', 'bidirectional', log_message, config_id=config.id)
-else:
-    raise UserError("No active Brevo configuration found")
+# Get active configuration and trigger sync
+configs = env['brevo.config'].search([('active', '=', True)])
+for config in configs:
+    config.action_sync_contacts()
         </field>
     </record>
 
     <record id="action_brevo_sync_lists" model="ir.actions.server">
         <field name="name">Sync Lists to Brevo</field>
-        <field name="model_id" ref="model_brevo_contact_list"/>
+        <field name="model_id" ref="model_brevo_config"/>
         <field name="state">code</field>
         <field name="code">
-# Get active configuration
-config = env['brevo.config'].get_active_config()
-if config:
-    from ..services.brevo_sync_service import BrevoSyncService
-    sync_service = BrevoSyncService(config)
-    result = sync_service.sync_lists()
-    
-    if result.get('success'):
-        log_message = f"Manual lists sync completed: {result.get('brevo_to_odoo', {}).get('synced_count', 0)} lists synced from Brevo, {result.get('odoo_to_brevo', {}).get('synced_count', 0)} lists synced to Brevo"
-    else:
-        log_message = f"Manual lists sync failed: {result.get('error', 'Unknown error')}"
-    
-    env['brevo.sync.log'].log_info('sync_all', 'bidirectional', log_message, config_id=config.id)
-else:
-    raise UserError("No active Brevo configuration found")
+# Get active configuration and trigger list sync
+configs = env['brevo.config'].search([('active', '=', True)])
+for config in configs:
+    config.action_sync_lists()
         </field>
     </record>
 
@@ -126,7 +104,7 @@ for record in records:
     if record.email and not record.is_company:
         result = record.sync_to_brevo()
     else:
-        raise UserError("Partner must have an email address and cannot be a company")
+        raise Exception("Partner must have an email address and cannot be a company")
         </field>
     </record>
 
