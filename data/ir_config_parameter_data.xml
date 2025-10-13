@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Default Configuration Parameters -->
+    <record id="ir_config_parameter_brevo_sync_interval" model="ir.config_parameter">
+        <field name="key">brevo.sync_interval</field>
+        <field name="value">15</field>
+    </record>
+
+    <record id="ir_config_parameter_brevo_batch_size" model="ir.config_parameter">
+        <field name="key">brevo.batch_size</field>
+        <field name="value">100</field>
+    </record>
+
+    <record id="ir_config_parameter_brevo_webhooks_enabled" model="ir.config_parameter">
+        <field name="key">brevo.webhooks_enabled</field>
+        <field name="value">True</field>
+    </record>
+
+    <record id="ir_config_parameter_brevo_api_key" model="ir.config_parameter">
+        <field name="key">brevo.api_key</field>
+        <field name="value"></field>
+    </record>
+
+    <record id="ir_config_parameter_brevo_webhook_secret" model="ir.config_parameter">
+        <field name="key">brevo.webhook_secret</field>
+        <field name="value"></field>
+    </record>
+
+    <!-- Default Field Mappings -->
+    <record id="ir_config_parameter_brevo_field_mappings" model="ir.config_parameter">
+        <field name="key">brevo.field_mappings</field>
+        <field name="value">{
+    "name": {
+        "brevo_attribute": "FNAME",
+        "split": true,
+        "first_name_field": "FNAME",
+        "last_name_field": "LNAME"
+    },
+    "mobile": {
+        "brevo_attribute": "SMS"
+    },
+    "street": {
+        "brevo_attribute": "ADDRESS"
+    },
+    "city": {
+        "brevo_attribute": "CITY"
+    },
+    "zip": {
+        "brevo_attribute": "ZIP"
+    },
+    "country_id": {
+        "brevo_attribute": "COUNTRY",
+        "use_name": true
+    },
+    "state_id": {
+        "brevo_attribute": "STATE",
+        "use_name": true
+    },
+    "parent_id": {
+        "brevo_attribute": "COMPANY",
+        "use_name": true
+    }
+}</field>
+    </record>
+
+</odoo>

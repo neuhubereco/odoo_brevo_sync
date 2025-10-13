@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Brevo Menu Structure -->
+    <menuitem id="menu_brevo_root" 
+              name="Brevo Integration" 
+              web_icon="brevo_connector,static/description/icon.png"
+              sequence="100"/>
+
+    <!-- Configuration Menu -->
+    <menuitem id="menu_brevo_config" 
+              name="Configuration" 
+              parent="menu_brevo_root" 
+              sequence="10"/>
+
+    <menuitem id="menu_brevo_config_wizard" 
+              name="Setup Wizard" 
+              parent="menu_brevo_config" 
+              action="action_brevo_config_wizard" 
+              sequence="10"/>
+
+    <menuitem id="menu_brevo_config_settings" 
+              name="Settings" 
+              parent="menu_brevo_config" 
+              action="action_brevo_config" 
+              sequence="20"/>
+
+    <!-- Data Management Menu -->
+    <menuitem id="menu_brevo_data" 
+              name="Data Management" 
+              parent="menu_brevo_root" 
+              sequence="20"/>
+
+    <menuitem id="menu_brevo_contact_lists" 
+              name="Contact Lists" 
+              parent="menu_brevo_data" 
+              action="action_brevo_contact_list" 
+              sequence="10"/>
+
+    <menuitem id="menu_brevo_dashboard" 
+              name="Dashboard" 
+              parent="menu_brevo_data" 
+              action="action_brevo_dashboard" 
+              sequence="20"/>
+
+    <!-- Monitoring Menu -->
+    <menuitem id="menu_brevo_monitoring" 
+              name="Monitoring" 
+              parent="menu_brevo_root" 
+              sequence="30"/>
+
+    <menuitem id="menu_brevo_sync_logs" 
+              name="Sync Logs" 
+              parent="menu_brevo_monitoring" 
+              action="action_brevo_sync_log" 
+              sequence="10"/>
+
+    <!-- Technical Menu Integration -->
+    <menuitem id="menu_brevo_technical" 
+              name="Brevo Integration" 
+              parent="base.menu_administration" 
+              action="action_brevo_config" 
+              sequence="100"/>
+
+    <!-- Actions -->
+    <record id="action_brevo_config_wizard" model="ir.actions.act_window">
+        <field name="name">Brevo Configuration Setup</field>
+        <field name="res_model">brevo.config.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="view_brevo_config_wizard_form"/>
+    </record>
+
+    <!-- Server Actions for Manual Sync -->
+    <record id="action_brevo_sync_contacts" model="ir.actions.server">
+        <field name="name">Sync Contacts to Brevo</field>
+        <field name="model_id" ref="model_res_partner"/>
+        <field name="state">code</field>
+        <field name="code">
+# Get active configuration
+config = env['brevo.config'].get_active_config()
+if config:
+    from ..services.brevo_sync_service import BrevoSyncService
+    sync_service = BrevoSyncService(config)
+    result = sync_service.sync_contacts()
+    
+    if result.get('success'):
+        log_message = f"Manual sync completed: {result.get('odoo_to_brevo', {}).get('synced_count', 0)} contacts synced to Brevo, {result.get('brevo_to_odoo', {}).get('synced_count', 0)} contacts synced from Brevo"
+    else:
+        log_message = f"Manual sync failed: {result.get('error', 'Unknown error')}"
+    
+    env['brevo.sync.log'].log_info('sync_all', 'bidirectional', log_message, config_id=config.id)
+else:
+    raise UserError("No active Brevo configuration found")
+        </field>
+    </record>
+
+    <record id="action_brevo_sync_lists" model="ir.actions.server">
+        <field name="name">Sync Lists to Brevo</field>
+        <field name="model_id" ref="model_brevo_contact_list"/>
+        <field name="state">code</field>
+        <field name="code">
+# Get active configuration
+config = env['brevo.config'].get_active_config()
+if config:
+    from ..services.brevo_sync_service import BrevoSyncService
+    sync_service = BrevoSyncService(config)
+    result = sync_service.sync_lists()
+    
+    if result.get('success'):
+        log_message = f"Manual lists sync completed: {result.get('brevo_to_odoo', {}).get('synced_count', 0)} lists synced from Brevo, {result.get('odoo_to_brevo', {}).get('synced_count', 0)} lists synced to Brevo"
+    else:
+        log_message = f"Manual lists sync failed: {result.get('error', 'Unknown error')}"
+    
+    env['brevo.sync.log'].log_info('sync_all', 'bidirectional', log_message, config_id=config.id)
+else:
+    raise UserError("No active Brevo configuration found")
+        </field>
+    </record>
+
+    <!-- Context Menu Actions -->
+    <record id="action_partner_sync_to_brevo" model="ir.actions.server">
+        <field name="name">Sync to Brevo</field>
+        <field name="model_id" ref="model_res_partner"/>
+        <field name="state">code</field>
+        <field name="code">
+for record in records:
+    if record.email and not record.is_company:
+        result = record.sync_to_brevo()
+    else:
+        raise UserError("Partner must have an email address and cannot be a company")
+        </field>
+    </record>
+
+    <record id="action_lead_sync_to_brevo" model="ir.actions.server">
+        <field name="name">Sync to Brevo</field>
+        <field name="model_id" ref="model_crm_lead"/>
+        <field name="state">code</field>
+        <field name="code">
+for record in records:
+    result = record.sync_to_brevo()
+        </field>
+    </record>
+
+    <record id="action_list_sync_to_brevo" model="ir.actions.server">
+        <field name="name">Sync to Brevo</field>
+        <field name="model_id" ref="model_brevo_contact_list"/>
+        <field name="state">code</field>
+        <field name="code">
+for record in records:
+    result = record.sync_to_brevo()
+        </field>
+    </record>
+
+</odoo>

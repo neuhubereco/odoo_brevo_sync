@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Partner Views Extension -->
+    <record id="view_partner_form_brevo" model="ir.ui.view">
+        <field name="name">res.partner.form.brevo</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='sales_purchases']" position="after">
+                <page string="Brevo Integration" name="brevo_integration">
+                    <group>
+                        <group string="Brevo Information">
+                            <field name="brevo_id"/>
+                            <field name="brevo_sync_status"/>
+                            <field name="brevo_last_sync"/>
+                            <field name="brevo_has_email" invisible="1"/>
+                        </group>
+                        <group string="Brevo Lists">
+                            <field name="brevo_lists" widget="many2many_tags"/>
+                        </group>
+                    </group>
+                    <group string="Sync Status">
+                        <group>
+                            <field name="brevo_sync_needed"/>
+                            <field name="brevo_created_date"/>
+                            <field name="brevo_modified_date"/>
+                        </group>
+                        <group>
+                            <field name="brevo_sync_error" readonly="1"/>
+                        </group>
+                    </group>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="sync_to_brevo" string="Sync to Brevo" type="object" class="oe_stat_button" icon="fa-sync" attrs="{'invisible': [('brevo_has_email', '=', False)]}"/>
+                    </div>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_partner_tree_brevo" model="ir.ui.view">
+        <field name="name">res.partner.tree.brevo</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='category_id']" position="after">
+                <field name="brevo_sync_status" optional="hide"/>
+                <field name="brevo_last_sync" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- CRM Lead Views Extension -->
+    <record id="view_crm_lead_form_brevo" model="ir.ui.view">
+        <field name="name">crm.lead.form.brevo</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='description']" position="after">
+                <page string="Brevo Integration" name="brevo_integration">
+                    <group>
+                        <group string="Brevo Information">
+                            <field name="brevo_lead_id"/>
+                            <field name="brevo_source"/>
+                            <field name="brevo_booking_id"/>
+                            <field name="brevo_sync_status"/>
+                        </group>
+                        <group string="Booking Details">
+                            <field name="brevo_booking_time"/>
+                            <field name="brevo_created_date"/>
+                            <field name="brevo_last_sync"/>
+                        </group>
+                    </group>
+                    <group string="Booking Notes">
+                        <field name="brevo_booking_notes" nolabel="1"/>
+                    </group>
+                    <group string="Sync Status">
+                        <group>
+                            <field name="brevo_sync_error" readonly="1"/>
+                        </group>
+                    </group>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="sync_to_brevo" string="Sync to Brevo" type="object" class="oe_stat_button" icon="fa-sync"/>
+                    </div>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_crm_lead_tree_brevo" model="ir.ui.view">
+        <field name="name">crm.lead.tree.brevo</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_case_tree_view_leads"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='user_id']" position="after">
+                <field name="brevo_source" optional="hide"/>
+                <field name="brevo_sync_status" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Brevo Configuration Wizard Views -->
+    <record id="view_brevo_config_wizard_form" model="ir.ui.view">
+        <field name="name">brevo.config.wizard.form</field>
+        <field name="model">brevo.config.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Brevo Configuration Setup">
+                <header>
+                    <button name="test_connection" string="Test Connection" type="object" class="btn-primary"/>
+                    <button name="setup_webhooks" string="Setup Webhooks" type="object" class="btn-secondary" attrs="{'invisible': [('connection_success', '=', False)]}"/>
+                    <button name="manual_sync_contacts" string="Sync Contacts" type="object" class="btn-secondary" attrs="{'invisible': [('connection_success', '=', False)]}"/>
+                    <button name="manual_sync_lists" string="Sync Lists" type="object" class="btn-secondary" attrs="{'invisible': [('connection_success', '=', False)]}"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Brevo Integration Setup</h1>
+                        <p>Configure your Brevo API connection and synchronization settings.</p>
+                    </div>
+                    
+                    <group>
+                        <group string="API Configuration">
+                            <field name="api_key" password="True" required="1"/>
+                            <div class="alert alert-info" role="alert">
+                                <strong>Note:</strong> You can find your API key in your Brevo account under Settings > API Keys.
+                            </div>
+                        </group>
+                        <group string="Sync Configuration">
+                            <field name="sync_interval"/>
+                            <field name="batch_size"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Webhook Configuration">
+                        <group>
+                            <field name="webhooks_enabled"/>
+                            <field name="webhook_secret" password="True"/>
+                        </group>
+                        <group>
+                            <div class="alert alert-info" role="alert" attrs="{'invisible': [('webhooks_enabled', '=', False)]}">
+                                <strong>Webhook URL:</strong> <span id="webhook_url_display">Will be generated after configuration</span>
+                                <br/>
+                                <strong>Events:</strong> contact.created, contact.updated, contact.deleted, list.created, list.updated, list.deleted, booking.created, booking.updated, booking.cancelled
+                            </div>
+                        </group>
+                    </group>
+                    
+                    <group string="Field Mappings">
+                        <field name="field_mappings" widget="ace" options="{'mode': 'json'}"/>
+                        <button name="get_field_mapping_help" string="Field Mapping Help" type="object" class="btn-link"/>
+                    </group>
+                    
+                    <group string="Connection Test" attrs="{'invisible': [('connection_test_result', '=', False)]}">
+                        <field name="connection_success" invisible="1"/>
+                        <field name="connection_test_result" widget="text" readonly="1"/>
+                    </group>
+                    
+                    <footer>
+                        <button name="apply_configuration" string="Apply Configuration" type="object" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Webhook Test Template -->
+    <template id="webhook_test_template" name="Brevo Webhook Test">
+        <t t-call="web.layout">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Brevo Webhook Test</h3>
+                            </div>
+                            <div class="card-body">
+                                <t t-if="error">
+                                    <div class="alert alert-danger" role="alert">
+                                        <strong>Error:</strong> <t t-esc="error"/>
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <div class="alert alert-success" role="alert">
+                                        <strong>Success!</strong> Webhook configuration is working.
+                                    </div>
+                                    <h4>Webhook Information</h4>
+                                    <ul>
+                                        <li><strong>Webhook URL:</strong> <code><t t-esc="webhook_url"/></code></li>
+                                        <li><strong>Configuration:</strong> <t t-esc="config.name"/></li>
+                                        <li><strong>Company:</strong> <t t-esc="config.company_id.name"/></li>
+                                    </ul>
+                                    <h4>Next Steps</h4>
+                                    <ol>
+                                        <li>Copy the webhook URL above</li>
+                                        <li>Go to your Brevo account</li>
+                                        <li>Navigate to Settings > Webhooks</li>
+                                        <li>Create a new webhook with the URL above</li>
+                                        <li>Select the following events:
+                                            <ul>
+                                                <li>contact.created</li>
+                                                <li>contact.updated</li>
+                                                <li>contact.deleted</li>
+                                                <li>list.created</li>
+                                                <li>list.updated</li>
+                                                <li>list.deleted</li>
+                                                <li>booking.created</li>
+                                                <li>booking.updated</li>
+                                                <li>booking.cancelled</li>
+                                            </ul>
+                                        </li>
+                                    </ol>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+</odoo>

@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Brevo Configuration Views -->
+    <record id="view_brevo_config_form" model="ir.ui.view">
+        <field name="name">brevo.config.form</field>
+        <field name="model">brevo.config</field>
+        <field name="arch" type="xml">
+            <form string="Brevo Configuration">
+                <header>
+                    <button name="test_connection" string="Test Connection" type="object" class="btn-primary"/>
+                    <button name="manual_sync_contacts" string="Sync Contacts" type="object" class="btn-secondary"/>
+                    <button name="manual_sync_lists" string="Sync Lists" type="object" class="btn-secondary"/>
+                    <field name="sync_status" widget="statusbar" statusbar_visible="idle,syncing,success,error"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Configuration Name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="API Configuration">
+                            <field name="api_key" password="True"/>
+                            <field name="webhook_url" readonly="1"/>
+                        </group>
+                        <group string="Sync Configuration">
+                            <field name="sync_interval"/>
+                            <field name="batch_size"/>
+                            <field name="webhooks_enabled"/>
+                        </group>
+                    </group>
+                    <group string="Field Mappings">
+                        <field name="field_mappings" widget="ace" options="{'mode': 'json'}"/>
+                    </group>
+                    <group string="Sync Status">
+                        <group>
+                            <field name="last_sync_contacts"/>
+                            <field name="last_sync_lists"/>
+                        </group>
+                        <group>
+                            <field name="error_message" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_brevo_config_tree" model="ir.ui.view">
+        <field name="name">brevo.config.tree</field>
+        <field name="model">brevo.config</field>
+        <field name="arch" type="xml">
+            <tree string="Brevo Configurations">
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="sync_status"/>
+                <field name="last_sync_contacts"/>
+                <field name="last_sync_lists"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_brevo_config_search" model="ir.ui.view">
+        <field name="name">brevo.config.search</field>
+        <field name="model">brevo.config</field>
+        <field name="arch" type="xml">
+            <search string="Search Brevo Configurations">
+                <field name="name"/>
+                <field name="company_id"/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Company" name="group_company" context="{'group_by': 'company_id'}"/>
+                    <filter string="Sync Status" name="group_status" context="{'group_by': 'sync_status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Brevo Contact List Views -->
+    <record id="view_brevo_contact_list_form" model="ir.ui.view">
+        <field name="name">brevo.contact.list.form</field>
+        <field name="model">brevo.contact.list</field>
+        <field name="arch" type="xml">
+            <form string="Brevo Contact List">
+                <header>
+                    <button name="sync_to_brevo" string="Sync to Brevo" type="object" class="btn-primary"/>
+                    <button name="sync_memberships" string="Sync Memberships" type="object" class="btn-secondary"/>
+                    <field name="sync_status" widget="statusbar" statusbar_visible="never,pending,synced,error"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="List Name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Brevo Information">
+                            <field name="brevo_id"/>
+                            <field name="folder_id"/>
+                            <field name="description"/>
+                        </group>
+                        <group string="Statistics">
+                            <field name="unique_subscribers"/>
+                            <field name="total_blacklisted"/>
+                            <field name="total_unsubscribers"/>
+                        </group>
+                    </group>
+                    <group string="Odoo Mapping">
+                        <field name="partner_category_ids" widget="many2many_tags"/>
+                    </group>
+                    <group string="Sync Information">
+                        <group>
+                            <field name="last_sync"/>
+                            <field name="created_at"/>
+                            <field name="updated_at"/>
+                        </group>
+                        <group>
+                            <field name="sync_error" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_brevo_contact_list_tree" model="ir.ui.view">
+        <field name="name">brevo.contact.list.tree</field>
+        <field name="model">brevo.contact.list</field>
+        <field name="arch" type="xml">
+            <tree string="Brevo Contact Lists">
+                <field name="name"/>
+                <field name="brevo_id"/>
+                <field name="unique_subscribers"/>
+                <field name="sync_status"/>
+                <field name="last_sync"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_brevo_contact_list_search" model="ir.ui.view">
+        <field name="name">brevo.contact.list.search</field>
+        <field name="model">brevo.contact.list</field>
+        <field name="arch" type="xml">
+            <search string="Search Brevo Contact Lists">
+                <field name="name"/>
+                <field name="brevo_id"/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Company" name="group_company" context="{'group_by': 'company_id'}"/>
+                    <filter string="Sync Status" name="group_status" context="{'group_by': 'sync_status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Brevo Sync Log Views -->
+    <record id="view_brevo_sync_log_tree" model="ir.ui.view">
+        <field name="name">brevo.sync.log.tree</field>
+        <field name="model">brevo.sync.log</field>
+        <field name="arch" type="xml">
+            <tree string="Brevo Sync Logs" decoration-success="status == 'success'" decoration-danger="status == 'error'" decoration-warning="status == 'warning'">
+                <field name="create_date"/>
+                <field name="operation"/>
+                <field name="direction"/>
+                <field name="status"/>
+                <field name="message"/>
+                <field name="partner_id"/>
+                <field name="contact_list_id"/>
+                <field name="lead_id"/>
+                <field name="duration"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_brevo_sync_log_form" model="ir.ui.view">
+        <field name="name">brevo.sync.log.form</field>
+        <field name="model">brevo.sync.log</field>
+        <field name="arch" type="xml">
+            <form string="Brevo Sync Log">
+                <header>
+                    <button name="action_view_related_record" string="View Related Record" type="object" class="btn-primary" attrs="{'invisible': [('partner_id', '=', False), ('contact_list_id', '=', False), ('lead_id', '=', False)]}"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Operation Details">
+                            <field name="operation"/>
+                            <field name="direction"/>
+                            <field name="status"/>
+                            <field name="message"/>
+                        </group>
+                        <group string="Timing">
+                            <field name="start_time"/>
+                            <field name="end_time"/>
+                            <field name="duration"/>
+                        </group>
+                    </group>
+                    <group string="Related Records">
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="contact_list_id"/>
+                            <field name="lead_id"/>
+                        </group>
+                        <group>
+                            <field name="brevo_id"/>
+                            <field name="brevo_email"/>
+                        </group>
+                    </group>
+                    <group string="Additional Information">
+                        <field name="error_message" readonly="1"/>
+                        <field name="details" widget="ace" options="{'mode': 'json'}" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_brevo_sync_log_search" model="ir.ui.view">
+        <field name="name">brevo.sync.log.search</field>
+        <field name="model">brevo.sync.log</field>
+        <field name="arch" type="xml">
+            <search string="Search Brevo Sync Logs">
+                <field name="operation"/>
+                <field name="direction"/>
+                <field name="status"/>
+                <field name="message"/>
+                <field name="partner_id"/>
+                <field name="contact_list_id"/>
+                <field name="lead_id"/>
+                <filter string="Success" name="success" domain="[('status', '=', 'success')]"/>
+                <filter string="Error" name="error" domain="[('status', '=', 'error')]"/>
+                <filter string="Warning" name="warning" domain="[('status', '=', 'warning')]"/>
+                <filter string="Today" name="today" domain="[('create_date', '>=', datetime.datetime.combine(context_today(), datetime.time(0,0,0)))]"/>
+                <filter string="This Week" name="this_week" domain="[('create_date', '>=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Operation" name="group_operation" context="{'group_by': 'operation'}"/>
+                    <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
+                    <filter string="Date" name="group_date" context="{'group_by': 'create_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Dashboard View -->
+    <record id="view_brevo_dashboard" model="ir.ui.view">
+        <field name="name">brevo.dashboard</field>
+        <field name="model">brevo.config</field>
+        <field name="arch" type="xml">
+            <kanban string="Brevo Dashboard">
+                <field name="name"/>
+                <field name="sync_status"/>
+                <field name="last_sync_contacts"/>
+                <field name="last_sync_lists"/>
+                <field name="error_message"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="oe_kanban_content">
+                                <div class="oe_kanban_details">
+                                    <strong class="oe_kanban_title">
+                                        <field name="name"/>
+                                    </strong>
+                                    <div class="oe_kanban_tags_section">
+                                        <span class="oe_kanban_tag" t-att-class="record.sync_status.raw_value == 'success' and 'oe_kanban_tag_success' or record.sync_status.raw_value == 'error' and 'oe_kanban_tag_danger' or 'oe_kanban_tag_default'">
+                                            <field name="sync_status"/>
+                                        </span>
+                                    </div>
+                                    <div class="oe_kanban_footer">
+                                        <div class="oe_kanban_footer_left">
+                                            <span>Last Contacts Sync: <field name="last_sync_contacts"/></span>
+                                        </div>
+                                        <div class="oe_kanban_footer_right">
+                                            <span>Last Lists Sync: <field name="last_sync_lists"/></span>
+                                        </div>
+                                    </div>
+                                    <div t-if="record.error_message.raw_value" class="oe_kanban_footer">
+                                        <span class="text-danger">Error: <field name="error_message"/></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Actions -->
+    <record id="action_brevo_config" model="ir.actions.act_window">
+        <field name="name">Brevo Configuration</field>
+        <field name="res_model">brevo.config</field>
+        <field name="view_mode">tree,form,kanban</field>
+        <field name="search_view_id" ref="view_brevo_config_search"/>
+        <field name="context">{'search_default_active': 1}</field>
+    </record>
+
+    <record id="action_brevo_contact_list" model="ir.actions.act_window">
+        <field name="name">Brevo Contact Lists</field>
+        <field name="res_model">brevo.contact.list</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_brevo_contact_list_search"/>
+        <field name="context">{'search_default_active': 1}</field>
+    </record>
+
+    <record id="action_brevo_sync_log" model="ir.actions.act_window">
+        <field name="name">Brevo Sync Logs</field>
+        <field name="res_model">brevo.sync.log</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_brevo_sync_log_search"/>
+        <field name="context">{'search_default_today': 1}</field>
+    </record>
+
+    <record id="action_brevo_dashboard" model="ir.actions.act_window">
+        <field name="name">Brevo Dashboard</field>
+        <field name="res_model">brevo.config</field>
+        <field name="view_mode">kanban</field>
+        <field name="view_id" ref="view_brevo_dashboard"/>
+        <field name="context">{'search_default_active': 1}</field>
+    </record>
+
+</odoo>

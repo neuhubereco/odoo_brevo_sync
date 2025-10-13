@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_brevo_config_manager,brevo.config.manager,model_brevo_config,base.group_system,1,1,1,1
+access_brevo_config_user,brevo.config.user,model_brevo_config,base.group_user,1,0,0,0
+access_brevo_contact_list_manager,brevo.contact.list.manager,model_brevo_contact_list,base.group_system,1,1,1,1
+access_brevo_contact_list_user,brevo.contact.list.user,model_brevo_contact_list,base.group_user,1,0,0,0
+access_brevo_sync_log_manager,brevo.sync.log.manager,model_brevo_sync_log,base.group_system,1,1,1,1
+access_brevo_sync_log_user,brevo.sync.log.user,model_brevo_sync_log,base.group_user,1,0,0,0
+access_brevo_config_wizard_manager,brevo.config.wizard.manager,model_brevo_config_wizard,base.group_system,1,1,1,1
+access_brevo_config_wizard_user,brevo.config.wizard.user,model_brevo_config_wizard,base.group_user,1,0,0,0
