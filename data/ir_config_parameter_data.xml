@@ -26,41 +26,6 @@
         <field name="value"></field>
     </record>
 
-    <!-- Default Field Mappings -->
-    <record id="ir_config_parameter_brevo_field_mappings" model="ir.config_parameter">
-        <field name="key">brevo.field_mappings</field>
-        <field name="value">{
-    "name": {
-        "brevo_attribute": "FNAME",
-        "split": true,
-        "first_name_field": "FNAME",
-        "last_name_field": "LNAME"
-    },
-    "mobile": {
-        "brevo_attribute": "SMS"
-    },
-    "street": {
-        "brevo_attribute": "ADDRESS"
-    },
-    "city": {
-        "brevo_attribute": "CITY"
-    },
-    "zip": {
-        "brevo_attribute": "ZIP"
-    },
-    "country_id": {
-        "brevo_attribute": "COUNTRY",
-        "use_name": true
-    },
-    "state_id": {
-        "brevo_attribute": "STATE",
-        "use_name": true
-    },
-    "parent_id": {
-        "brevo_attribute": "COMPANY",
-        "use_name": true
-    }
-}</field>
-    </record>
+    <!-- Field Mappings will be configured via GUI -->
 
 </odoo>

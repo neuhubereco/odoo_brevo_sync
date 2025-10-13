@@ -50,14 +50,14 @@
         <field name="name">brevo.config.tree</field>
         <field name="model">brevo.config</field>
         <field name="arch" type="xml">
-            <tree string="Brevo Configurations">
+            <list string="Brevo Configurations">
                 <field name="name"/>
                 <field name="company_id"/>
                 <field name="sync_status"/>
                 <field name="last_sync_contacts"/>
                 <field name="last_sync_lists"/>
                 <field name="active"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -295,7 +295,7 @@
     <record id="action_brevo_config" model="ir.actions.act_window">
         <field name="name">Brevo Configuration</field>
         <field name="res_model">brevo.config</field>
-        <field name="view_mode">tree,form,kanban</field>
+        <field name="view_mode">list,form,kanban</field>
         <field name="search_view_id" ref="view_brevo_config_search"/>
         <field name="context">{'search_default_active': 1}</field>
     </record>
@@ -303,7 +303,7 @@
     <record id="action_brevo_contact_list" model="ir.actions.act_window">
         <field name="name">Brevo Contact Lists</field>
         <field name="res_model">brevo.contact.list</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="view_brevo_contact_list_search"/>
         <field name="context">{'search_default_active': 1}</field>
     </record>
@@ -311,7 +311,7 @@
     <record id="action_brevo_sync_log" model="ir.actions.act_window">
         <field name="name">Brevo Sync Logs</field>
         <field name="res_model">brevo.sync.log</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="view_brevo_sync_log_search"/>
         <field name="context">{'search_default_today': 1}</field>
     </record>
