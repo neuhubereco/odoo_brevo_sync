@@ -201,37 +201,52 @@ class BrevoConfig(models.Model):
                         'string': field_obj.string,
                     })
 
-            # Update field discovery records
+            # Clear existing discovery records for this company
+            self.env['brevo.field.discovery'].search([
+                ('company_id', '=', self.company_id.id)
+            ]).unlink()
+
+            # Create discovery records only for common field combinations
+            common_mappings = {
+                'FNAME': 'name',
+                'LNAME': 'name', 
+                'EMAIL': 'email',
+                'SMS': 'mobile',
+                'PHONE': 'phone',
+                'ADDRESS': 'street',
+                'CITY': 'city',
+                'ZIP': 'zip',
+                'COUNTRY': 'country_id',
+                'STATE': 'state_id',
+                'WEBSITE': 'website',
+                'COMPANY': 'parent_id',
+            }
+
+            discovery_count = 0
             for brevo_attr in result.get('attributes', []):
-                for odoo_field in odoo_fields:
-                    # Create discovery record if it doesn't exist
-                    discovery = self.env['brevo.field.discovery'].search([
-                        ('brevo_field_name', '=', brevo_attr['name']),
-                        ('odoo_field_name', '=', odoo_field['name']),
-                        ('company_id', '=', self.company_id.id)
-                    ], limit=1)
-
-                    vals = {
-                        'brevo_field_name': brevo_attr['name'],
-                        'brevo_field_type': brevo_attr.get('type', ''),
-                        'brevo_field_category': brevo_attr.get('category', ''),
-                        'odoo_field_name': odoo_field['name'],
-                        'odoo_field_type': odoo_field['type'],
-                        'odoo_field_string': odoo_field['string'],
-                        'company_id': self.company_id.id,
-                    }
-
-                    if discovery:
-                        discovery.write(vals)
-                    else:
-                        self.env['brevo.field.discovery'].create(vals)
+                brevo_name = brevo_attr['name']
+                if brevo_name in common_mappings:
+                    odoo_field_name = common_mappings[brevo_name]
+                    odoo_field = partner_model._fields.get(odoo_field_name)
+                    
+                    if odoo_field:
+                        self.env['brevo.field.discovery'].create({
+                            'brevo_field_name': brevo_name,
+                            'brevo_field_type': brevo_attr.get('type', ''),
+                            'brevo_field_category': brevo_attr.get('category', ''),
+                            'odoo_field_name': odoo_field_name,
+                            'odoo_field_type': odoo_field.type,
+                            'odoo_field_string': odoo_field.string,
+                            'company_id': self.company_id.id,
+                        })
+                        discovery_count += 1
 
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
                     'title': _('Field Discovery Complete'),
-                    'message': _('Discovered %d field combinations') % len(result.get('attributes', [])) * len(odoo_fields),
+                    'message': _('Discovered %d field combinations') % discovery_count,
                     'type': 'success',
                 }
             }

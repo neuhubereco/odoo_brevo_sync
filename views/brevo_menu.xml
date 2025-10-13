@@ -4,6 +4,7 @@
     <menuitem id="menu_brevo_root" 
               name="Brevo Integration" 
               web_icon="brevo_connector,static/description/icon.png"
+              action="action_brevo_dashboard"
               sequence="100"/>
 
     <!-- Configuration Menu -->

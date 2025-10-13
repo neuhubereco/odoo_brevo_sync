@@ -31,7 +31,12 @@
                         </group>
                     </group>
                     <group string="Field Mappings">
-                        <field name="field_mappings" widget="text"/>
+                        <div class="alert alert-info" role="alert">
+                            <strong>Field Mappings:</strong> Use the Field Discovery feature to automatically map Brevo fields to Odoo fields.
+                            <br/>
+                            <button name="action_brevo_field_discovery" string="Open Field Discovery" type="action" class="btn btn-sm btn-primary"/>
+                        </div>
+                        <field name="field_mappings" widget="text" invisible="1"/>
                     </group>
                     <group string="Sync Status">
                         <group>
