@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 
@@ -248,3 +248,28 @@ class BrevoSyncLog(models.Model):
                     'type': 'info',
                 }
             }
+
+    def action_cleanup_old_logs(self):
+        """Method for cron job to cleanup old logs"""
+        try:
+            # Delete logs older than 30 days, but keep error logs for 90 days
+            cutoff_date_success = fields.Datetime.now() - timedelta(days=30)
+            cutoff_date_error = fields.Datetime.now() - timedelta(days=90)
+            
+            # Delete successful logs older than 30 days
+            success_logs = self.search([
+                ('status', '=', 'success'),
+                ('create_date', '<', cutoff_date_success)
+            ])
+            success_logs.unlink()
+            
+            # Delete error logs older than 90 days
+            error_logs = self.search([
+                ('status', '=', 'error'),
+                ('create_date', '<', cutoff_date_error)
+            ])
+            error_logs.unlink()
+            
+            _logger.info(f"Cleaned up old Brevo sync logs: {len(success_logs)} success logs, {len(error_logs)} error logs")
+        except Exception as e:
+            _logger.error(f"Failed to cleanup old Brevo sync logs: {str(e)}")

@@ -272,3 +272,39 @@ class BrevoConfig(models.Model):
                     'type': 'danger',
                 }
             }
+
+    def action_sync_contacts(self):
+        """Method for cron job to sync contacts"""
+        try:
+            from ..services.brevo_sync_service import BrevoSyncService
+            sync_service = BrevoSyncService(self)
+            result = sync_service.sync_contacts()
+            
+            if result.get('success'):
+                self.sync_status = 'success'
+                self.error_message = False
+            else:
+                self.sync_status = 'error'
+                self.error_message = result.get('error', 'Unknown error')
+        except Exception as e:
+            _logger.error(f"Brevo contact sync cron failed for config {self.id}: {str(e)}")
+            self.sync_status = 'error'
+            self.error_message = str(e)
+
+    def action_sync_lists(self):
+        """Method for cron job to sync lists"""
+        try:
+            from ..services.brevo_sync_service import BrevoSyncService
+            sync_service = BrevoSyncService(self)
+            result = sync_service.sync_lists()
+            
+            if result.get('success'):
+                self.sync_status = 'success'
+                self.error_message = False
+            else:
+                self.sync_status = 'error'
+                self.error_message = result.get('error', 'Unknown error')
+        except Exception as e:
+            _logger.error(f"Brevo list sync cron failed for config {self.id}: {str(e)}")
+            self.sync_status = 'error'
+            self.error_message = str(e)

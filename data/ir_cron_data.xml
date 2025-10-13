@@ -6,28 +6,10 @@
         <field name="model_id" ref="model_brevo_config"/>
         <field name="state">code</field>
         <field name="code">
-# Get all active configurations
+# Get all active configurations and trigger sync
 configs = env['brevo.config'].search([('active', '=', True)])
-
 for config in configs:
-    try:
-        from ..services.brevo_sync_service import BrevoSyncService
-        sync_service = BrevoSyncService(config)
-        
-        # Sync contacts
-        result = sync_service.sync_contacts()
-        
-        if result.get('success'):
-            config.sync_status = 'success'
-            config.error_message = False
-        else:
-            config.sync_status = 'error'
-            config.error_message = result.get('error', 'Unknown error')
-            
-    except Exception as e:
-        config.sync_status = 'error'
-        config.error_message = str(e)
-        _logger.error(f"Brevo contact sync cron failed for config {config.id}: {str(e)}")
+    config.action_sync_contacts()
         </field>
         <field name="interval_number">15</field>
         <field name="interval_type">minutes</field>
@@ -40,28 +22,10 @@ for config in configs:
         <field name="model_id" ref="model_brevo_config"/>
         <field name="state">code</field>
         <field name="code">
-# Get all active configurations
+# Get all active configurations and trigger list sync
 configs = env['brevo.config'].search([('active', '=', True)])
-
 for config in configs:
-    try:
-        from ..services.brevo_sync_service import BrevoSyncService
-        sync_service = BrevoSyncService(config)
-        
-        # Sync lists
-        result = sync_service.sync_lists()
-        
-        if result.get('success'):
-            config.sync_status = 'success'
-            config.error_message = False
-        else:
-            config.sync_status = 'error'
-            config.error_message = result.get('error', 'Unknown error')
-            
-    except Exception as e:
-        config.sync_status = 'error'
-        config.error_message = str(e)
-        _logger.error(f"Brevo list sync cron failed for config {config.id}: {str(e)}")
+    config.action_sync_lists()
         </field>
         <field name="interval_number">30</field>
         <field name="interval_type">minutes</field>
@@ -74,9 +38,9 @@ for config in configs:
         <field name="model_id" ref="model_brevo_sync_log"/>
         <field name="state">code</field>
         <field name="code">
-# Clean up old sync logs (keep error logs longer)
+# Clean up old sync logs
 logs = env['brevo.sync.log']
-logs.cleanup_old_logs(days=30)
+logs.action_cleanup_old_logs()
         </field>
         <field name="interval_number">1</field>
         <field name="interval_type">days</field>
