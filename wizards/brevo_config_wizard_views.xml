@@ -119,4 +119,13 @@
         </t>
     </template>
 
+    <!-- Actions -->
+    <record id="action_brevo_config_wizard" model="ir.actions.act_window">
+        <field name="name">Brevo Configuration Setup</field>
+        <field name="res_model">brevo.config.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="view_brevo_config_wizard_form"/>
+    </record>
+
 </odoo>
