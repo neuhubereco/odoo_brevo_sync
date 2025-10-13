@@ -9,3 +9,5 @@ access_brevo_config_wizard_manager,brevo.config.wizard.manager,model_brevo_confi
 access_brevo_config_wizard_user,brevo.config.wizard.user,model_brevo_config_wizard,base.group_user,1,0,0,0
 access_brevo_field_mapping_manager,brevo.field.mapping.manager,model_brevo_field_mapping,base.group_system,1,1,1,1
 access_brevo_field_mapping_user,brevo.field.mapping.user,model_brevo_field_mapping,base.group_user,1,0,0,0
+access_brevo_field_discovery_manager,brevo.field.discovery.manager,model_brevo_field_discovery,base.group_system,1,1,1,1
+access_brevo_field_discovery_user,brevo.field.discovery.user,model_brevo_field_discovery,base.group_user,1,1,1,0
