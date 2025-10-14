@@ -206,19 +206,19 @@ class BrevoConfig(models.Model):
                 ('company_id', '=', self.company_id.id)
             ]).unlink()
 
-                # Create discovery records for all Brevo attributes
-                discovery_count = 0
-                for brevo_attr in result.get('attributes', []):
-                    brevo_name = brevo_attr['name']
-                    
-                    # Create discovery record for each Brevo field
-                    self.env['brevo.field.discovery'].create({
-                        'brevo_field_name': brevo_name,
-                        'brevo_field_type': brevo_attr.get('type', ''),
-                        'brevo_field_category': brevo_attr.get('category', ''),
-                        'company_id': self.company_id.id,
-                    })
-                    discovery_count += 1
+            # Create discovery records for all Brevo attributes
+            discovery_count = 0
+            for brevo_attr in result.get('attributes', []):
+                brevo_name = brevo_attr['name']
+                
+                # Create discovery record for each Brevo field
+                self.env['brevo.field.discovery'].create({
+                    'brevo_field_name': brevo_name,
+                    'brevo_field_type': brevo_attr.get('type', ''),
+                    'brevo_field_category': brevo_attr.get('category', ''),
+                    'company_id': self.company_id.id,
+                })
+                discovery_count += 1
 
             return {
                 'type': 'ir.actions.client',
