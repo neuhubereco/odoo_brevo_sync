@@ -413,15 +413,43 @@ class BrevoConfig(models.Model):
                 'EMAIL_CONSENT': {'odoo_field': 'x_brevo_email_consent', 'type': 'boolean'},
             }
 
+            # Clear existing discovery records for this company
+            self.env['brevo.field.discovery'].search([
+                ('company_id', '=', self.company_id.id)
+            ]).unlink()
+
             # Create discovery records with predefined mappings
             discovery_count = 0
             for brevo_name, mapping_info in predefined_mappings.items():
+                # Determine category based on field name
+                category = 'custom'
+                if brevo_name in ['FNAME', 'LNAME', 'BIRTHDAY', 'AGE', 'GENDER', 'TITLE', 'FIRSTNAME', 'LASTNAME', 'MIDDLENAME', 'NICKNAME']:
+                    category = 'personal'
+                elif brevo_name in ['EMAIL', 'SMS', 'PHONE', 'MOBILE', 'FAX', 'WEBSITE', 'SKYPE', 'LINKEDIN', 'TWITTER', 'FACEBOOK', 'INSTAGRAM', 'YOUTUBE', 'TIKTOK']:
+                    category = 'contact'
+                elif brevo_name in ['ADDRESS', 'STREET', 'STREET2', 'CITY', 'ZIP', 'POSTAL_CODE', 'COUNTRY', 'STATE', 'PROVINCE', 'REGION', 'TIMEZONE', 'LATITUDE', 'LONGITUDE']:
+                    category = 'address'
+                elif brevo_name in ['COMPANY', 'COMPANY_NAME', 'JOB_TITLE', 'POSITION', 'DEPARTMENT', 'INDUSTRY', 'COMPANY_SIZE', 'ANNUAL_REVENUE', 'EMPLOYEES', 'COMPANY_WEBSITE', 'COMPANY_PHONE', 'COMPANY_EMAIL']:
+                    category = 'company'
+                elif brevo_name in ['SOURCE', 'LEAD_SOURCE', 'CAMPAIGN', 'UTM_SOURCE', 'UTM_MEDIUM', 'UTM_CAMPAIGN', 'UTM_TERM', 'UTM_CONTENT', 'REFERRER', 'LANDING_PAGE', 'SUBSCRIBER_TYPE', 'SUBSCRIPTION_STATUS', 'OPT_IN_DATE', 'OPT_OUT_DATE', 'LAST_ACTIVITY', 'LAST_OPEN', 'LAST_CLICK', 'EMAIL_FREQUENCY', 'PREFERRED_LANGUAGE', 'COMMUNICATION_PREFERENCE']:
+                    category = 'marketing'
+
+                # Get Odoo field info
+                odoo_field = self.env['res.partner']._fields.get(mapping_info['odoo_field'])
+                odoo_field_type = mapping_info['type']
+                odoo_field_string = ''
+                if odoo_field:
+                    odoo_field_type = odoo_field.type
+                    odoo_field_string = odoo_field.string
+
                 # Create discovery record
                 discovery_record = self.env['brevo.field.discovery'].create({
                     'brevo_field_name': brevo_name,
                     'odoo_field_name': mapping_info['odoo_field'],
-                    'brevo_field_type': 'text',  # Default type
-                    'brevo_field_category': 'custom',
+                    'brevo_field_type': mapping_info['type'],
+                    'brevo_field_category': category,
+                    'odoo_field_type': odoo_field_type,
+                    'odoo_field_string': odoo_field_string,
                     'company_id': self.company_id.id,
                 })
                 
