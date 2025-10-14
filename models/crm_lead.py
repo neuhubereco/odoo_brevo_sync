@@ -98,9 +98,13 @@ class CrmLead(models.Model):
                 except (ValueError, AttributeError):
                     booking_time = False
             
-            # Create lead
+            # Create lead with improved naming: "Vorname Nachname - Meeting Type"
+            meeting_title = normalized.get('title', '')
+            partner_name = partner.name or email
+            lead_name = f"{partner_name} - {meeting_title}" if meeting_title else partner_name
+            
             lead_vals = {
-                'name': normalized.get('title', _('Brevo Booking Lead')),
+                'name': lead_name,
                 'partner_id': partner.id,
                 'email_from': email,
                 'description': normalized.get('description', ''),

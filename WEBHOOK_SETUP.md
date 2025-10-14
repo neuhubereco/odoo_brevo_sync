@@ -6,7 +6,22 @@ Dieses Dokument beschreibt, wie Sie Brevo-Webhooks für das Odoo Brevo Connector
 
 Das Modul bietet zwei Webhook-Endpunkte:
 
-### 1. Allgemeiner Webhook-Endpunkt
+### 1. Meeting/Call-spezifischer Endpunkt (EMPFOHLEN)
+```
+POST https://your-odoo-instance.com/brevo/booking
+```
+
+**Unterstützte Events:**
+- `meeting.created`
+- `meeting.updated`
+- `meeting.cancelled`
+- `call.created`
+- `call.started`
+- `call.cancelled`
+
+**Status:** ✅ Vollständig funktionsfähig und getestet
+
+### 2. Allgemeiner Webhook-Endpunkt
 ```
 POST https://your-odoo-instance.com/brevo/webhook
 ```
@@ -19,18 +34,7 @@ POST https://your-odoo-instance.com/brevo/webhook
 - `list.updated`
 - `list.deleted`
 
-### 2. Meeting/Call-spezifischer Endpunkt
-```
-POST https://your-odoo-instance.com/brevo/booking
-```
-
-**Unterstützte Events:**
-- `meeting.created`
-- `meeting.updated`
-- `meeting.cancelled`
-- `call.created`
-- `call.started`
-- `call.cancelled`
+**Status:** ⚠️ Funktioniert, aber benötigt zusätzliche Berechtigungen für Kontakt-Erstellung
 
 ## Brevo-Konfiguration
 
@@ -45,9 +49,10 @@ POST https://your-odoo-instance.com/brevo/booking
 - **URL**: `https://your-odoo-instance.com/brevo/webhook`
 - **Events**: Wählen Sie die gewünschten Events (contact.*, list.*)
 
-**Für Meeting/Call Events:**
+**Für Meeting/Call Events (EMPFOHLEN):**
 - **URL**: `https://your-odoo-instance.com/brevo/booking`
 - **Events**: Wählen Sie meeting.* und/oder call.* Events
+- **Status**: ✅ Vollständig funktionsfähig und getestet
 
 ### 2. Webhook-Signatur (Optional)
 
@@ -129,7 +134,7 @@ In **Einstellungen > Technisch > System-Parameter**:
 ### Meeting/Call Events
 1. **Partner-Erstellung/Aktualisierung**: Teilnehmer werden als Odoo-Partner erstellt oder aktualisiert
 2. **CRM-Lead-Erstellung**: Ein neuer Lead wird mit folgenden Details erstellt:
-   - Name: Meeting-Name
+   - Name: "Vorname Nachname - Meeting Type" (z.B. "Verena Schweighuber - Kennlerngespräch")
    - Partner: Teilnehmer-Partner
    - Beschreibung: Meeting-Notizen + Fragen und Antworten
    - Brevo-ID: Meeting-ID für Tracking
