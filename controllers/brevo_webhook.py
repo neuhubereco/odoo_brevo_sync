@@ -16,7 +16,7 @@ _logger = logging.getLogger(__name__)
 class BrevoWebhookController(http.Controller):
     """Controller for handling Brevo webhooks"""
     
-    @http.route('/brevo/webhook', type='json', auth='none', methods=['POST'], csrf=False)
+    @http.route('/brevo/webhook', type='json', auth='public', methods=['POST'], csrf=False)
     def brevo_webhook(self):
         """Handle incoming webhooks from Brevo"""
         try:
@@ -67,7 +67,7 @@ class BrevoWebhookController(http.Controller):
             
             return {'status': 'error', 'message': 'Internal server error'}
 
-    @http.route('/brevo/webhook', type='http', auth='none', methods=['POST'], csrf=False)
+    @http.route('/brevo/webhook', type='http', auth='public', methods=['POST'], csrf=False)
     def brevo_webhook_http(self, **kwargs):
         """HTTP fallback: accept plain JSON body or form-encoded 'payload' without auth"""
         try:
@@ -94,7 +94,7 @@ class BrevoWebhookController(http.Controller):
             _logger.error(f"Brevo webhook (http) failed: {str(e)}")
             return request.make_json_response({'status': 'error', 'message': 'Internal server error'}, status=500)
 
-    @http.route('/brevo/booking', type='json', auth='none', methods=['POST'], csrf=False)
+    @http.route('/brevo/booking', type='json', auth='public', methods=['POST'], csrf=False)
     def brevo_booking_json(self):
         """Dedicated booking endpoint without auth"""
         try:
@@ -109,7 +109,7 @@ class BrevoWebhookController(http.Controller):
             _logger.error(f"Brevo booking (json) failed: {str(e)}")
             return {'status': 'error', 'message': 'Internal server error'}
 
-    @http.route('/brevo/booking', type='http', auth='none', methods=['POST'], csrf=False)
+    @http.route('/brevo/booking', type='http', auth='public', methods=['POST'], csrf=False)
     def brevo_booking_http(self, **kwargs):
         """HTTP fallback booking endpoint without auth"""
         try:
@@ -132,7 +132,7 @@ class BrevoWebhookController(http.Controller):
     def _verify_webhook_signature(self, raw_data):
         """Verify webhook signature from Brevo (optional). If brevo.webhook_require_signature is False or not set, skip verification."""
         try:
-            ICP = request.env['ir.config_parameter'].sudo()
+            ICP = request.env['ir.config_parameter'].sudo().with_user(request.env.ref('base.public_user'))
             require_sig = ICP.get_param('brevo.webhook_require_signature', default='0') in ('1', 'true', 'True', True)
             if not require_sig:
                 return True
