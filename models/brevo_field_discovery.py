@@ -67,14 +67,132 @@ class BrevoFieldDiscovery(models.Model):
     @api.model
     def _get_odoo_field_selection(self):
         """Get available Odoo partner fields for selection"""
-        partner_model = self.env['res.partner']
-        fields_list = []
-        
-        for field_name, field_obj in partner_model._fields.items():
-            if field_obj.type in ['char', 'text', 'integer', 'float', 'boolean', 'date', 'datetime', 'selection', 'many2one', 'many2many']:
-                fields_list.append((field_name, f"{field_name} ({field_obj.string})"))
-        
-        return fields_list
+        try:
+            partner_model = self.env['res.partner']
+            fields_list = []
+            
+            # Add standard Odoo fields
+            standard_fields = [
+                ('name', 'Name'),
+                ('email', 'Email'),
+                ('phone', 'Phone'),
+                ('mobile', 'Mobile'),
+                ('street', 'Street'),
+                ('street2', 'Street2'),
+                ('city', 'City'),
+                ('zip', 'ZIP'),
+                ('website', 'Website'),
+                ('comment', 'Notes'),
+                ('title', 'Title'),
+                ('function', 'Job Position'),
+                ('parent_id', 'Company'),
+                ('country_id', 'Country'),
+                ('state_id', 'State'),
+                ('category_id', 'Tags'),
+                ('is_company', 'Is Company'),
+                ('customer_rank', 'Customer Rank'),
+                ('supplier_rank', 'Supplier Rank'),
+                ('lang', 'Language'),
+                ('tz', 'Timezone'),
+                ('date', 'Date of Birth'),
+                ('industry_id', 'Industry'),
+                ('company_name', 'Company Name'),
+                ('company_type', 'Company Type'),
+                ('user_id', 'Salesperson'),
+                ('team_id', 'Sales Team'),
+                ('ref', 'Reference'),
+                ('barcode', 'Barcode'),
+                ('active', 'Active'),
+            ]
+            
+            for field_name, field_label in standard_fields:
+                if field_name in partner_model._fields:
+                    fields_list.append((field_name, f"{field_name} ({field_label})"))
+            
+            # Add Brevo custom fields
+            brevo_fields = [
+                ('x_brevo_age', 'Brevo Age'),
+                ('x_brevo_gender', 'Brevo Gender'),
+                ('x_brevo_middlename', 'Brevo Middle Name'),
+                ('x_brevo_nickname', 'Brevo Nickname'),
+                ('x_brevo_fax', 'Brevo Fax'),
+                ('x_brevo_skype', 'Brevo Skype'),
+                ('x_brevo_linkedin', 'Brevo LinkedIn'),
+                ('x_brevo_twitter', 'Brevo Twitter'),
+                ('x_brevo_facebook', 'Brevo Facebook'),
+                ('x_brevo_instagram', 'Brevo Instagram'),
+                ('x_brevo_youtube', 'Brevo YouTube'),
+                ('x_brevo_tiktok', 'Brevo TikTok'),
+                ('x_brevo_latitude', 'Brevo Latitude'),
+                ('x_brevo_longitude', 'Brevo Longitude'),
+                ('x_brevo_department', 'Brevo Department'),
+                ('x_brevo_company_size', 'Brevo Company Size'),
+                ('x_brevo_annual_revenue', 'Brevo Annual Revenue'),
+                ('x_brevo_employees', 'Brevo Employees'),
+                ('x_brevo_company_website', 'Brevo Company Website'),
+                ('x_brevo_company_phone', 'Brevo Company Phone'),
+                ('x_brevo_company_email', 'Brevo Company Email'),
+                ('x_brevo_source', 'Brevo Source'),
+                ('x_brevo_campaign', 'Brevo Campaign'),
+                ('x_brevo_utm_medium', 'Brevo UTM Medium'),
+                ('x_brevo_utm_campaign', 'Brevo UTM Campaign'),
+                ('x_brevo_utm_term', 'Brevo UTM Term'),
+                ('x_brevo_utm_content', 'Brevo UTM Content'),
+                ('x_brevo_referrer', 'Brevo Referrer'),
+                ('x_brevo_landing_page', 'Brevo Landing Page'),
+                ('x_brevo_subscriber_type', 'Brevo Subscriber Type'),
+                ('x_brevo_subscription_status', 'Brevo Subscription Status'),
+                ('x_brevo_opt_in_date', 'Brevo Opt-in Date'),
+                ('x_brevo_opt_out_date', 'Brevo Opt-out Date'),
+                ('x_brevo_last_activity', 'Brevo Last Activity'),
+                ('x_brevo_last_open', 'Brevo Last Open'),
+                ('x_brevo_last_click', 'Brevo Last Click'),
+                ('x_brevo_email_frequency', 'Brevo Email Frequency'),
+                ('x_brevo_communication_preference', 'Brevo Communication Preference'),
+                ('x_brevo_custom_field_1', 'Brevo Custom Field 1'),
+                ('x_brevo_custom_field_2', 'Brevo Custom Field 2'),
+                ('x_brevo_custom_field_3', 'Brevo Custom Field 3'),
+                ('x_brevo_custom_field_4', 'Brevo Custom Field 4'),
+                ('x_brevo_custom_field_5', 'Brevo Custom Field 5'),
+                ('x_brevo_segment', 'Brevo Segment'),
+                ('x_brevo_score', 'Brevo Score'),
+                ('x_brevo_priority', 'Brevo Priority'),
+                ('x_brevo_status', 'Brevo Status'),
+                ('x_brevo_stage', 'Brevo Stage'),
+                ('x_brevo_type', 'Brevo Type'),
+                ('x_brevo_rating', 'Brevo Rating'),
+                ('x_brevo_salary', 'Brevo Salary'),
+                ('x_brevo_budget', 'Brevo Budget'),
+                ('x_brevo_interest', 'Brevo Interest'),
+                ('x_brevo_hobby', 'Brevo Hobby'),
+                ('x_brevo_education', 'Brevo Education'),
+                ('x_brevo_experience', 'Brevo Experience'),
+                ('x_brevo_skills', 'Brevo Skills'),
+                ('x_brevo_certifications', 'Brevo Certifications'),
+                ('x_brevo_languages', 'Brevo Languages'),
+                ('x_brevo_availability', 'Brevo Availability'),
+                ('x_brevo_preferred_contact_time', 'Brevo Preferred Contact Time'),
+                ('x_brevo_preferred_contact_method', 'Brevo Preferred Contact Method'),
+                ('x_brevo_consent_date', 'Brevo Consent Date'),
+                ('x_brevo_consent_source', 'Brevo Consent Source'),
+                ('x_brevo_consent_text', 'Brevo Consent Text'),
+                ('x_brevo_gdpr_consent', 'Brevo GDPR Consent'),
+                ('x_brevo_marketing_consent', 'Brevo Marketing Consent'),
+                ('x_brevo_newsletter_consent', 'Brevo Newsletter Consent'),
+                ('x_brevo_sms_consent', 'Brevo SMS Consent'),
+                ('x_brevo_call_consent', 'Brevo Call Consent'),
+                ('x_brevo_email_consent', 'Brevo Email Consent'),
+            ]
+            
+            for field_name, field_label in brevo_fields:
+                if field_name in partner_model._fields:
+                    fields_list.append((field_name, f"{field_name} ({field_label})"))
+            
+            return fields_list
+            
+        except Exception as e:
+            _logger.error(f"Error getting Odoo field selection: {str(e)}")
+            return [('', 'Error loading fields')]
 
     @api.onchange('odoo_field_name')
     def _onchange_odoo_field_name(self):

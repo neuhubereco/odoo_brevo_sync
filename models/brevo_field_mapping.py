@@ -211,3 +211,23 @@ class BrevoFieldMapping(models.Model):
         else:
             # Set the actual field if it exists
             setattr(partner, self.odoo_field_name, value)
+
+    def get_field_value_from_odoo(self, partner):
+        """Get field value from Odoo partner record"""
+        self.ensure_one()
+        
+        try:
+            if hasattr(partner, self.odoo_field_name):
+                return getattr(partner, self.odoo_field_name)
+            else:
+                # Try to get from dynamic fields JSON
+                if partner.brevo_dynamic_fields:
+                    try:
+                        dynamic_fields = json.loads(partner.brevo_dynamic_fields)
+                        return dynamic_fields.get(self.odoo_field_name)
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+                return None
+        except Exception as e:
+            _logger.error(f"Failed to get field value from Odoo: {str(e)}")
+            return None
