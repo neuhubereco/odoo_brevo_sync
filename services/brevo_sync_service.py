@@ -190,6 +190,9 @@ class BrevoSyncService:
                         if state:
                             partner_vals['state_id'] = state.id
             
+            # Apply field mappings (Brevo -> Odoo), including x_brevo_ Felder
+            self._apply_attribute_mappings_to_vals(attributes, partner_vals)
+
             # Create the partner
             partner = self.env['res.partner'].create(partner_vals)
             
@@ -280,6 +283,9 @@ class BrevoSyncService:
                     # Store Brevo list records for brevo_lists field
                     brevo_list_records = brevo_lists.ids
             
+            # Apply field mappings (Brevo -> Odoo), including x_brevo_ Felder
+            self._apply_attribute_mappings_to_vals(attributes, update_vals, partner=partner)
+
             # Apply updates
             partner.write(update_vals)
             
@@ -296,6 +302,92 @@ class BrevoSyncService:
         except Exception as e:
             _logger.error(f"Failed to update partner from Brevo contact: {str(e)}")
             raise e
+
+    def _apply_attribute_mappings_to_vals(self, attributes: Dict[str, Any], vals: Dict[str, Any], partner=None) -> None:
+        """Apply active Brevo->Odoo field mappings to a vals dict for partner create/update.
+        If partner provided, we are in update-mode; otherwise create-mode.
+        """
+        try:
+            # Get active mappings for current company
+            mapping_domain = [
+                ('active', '=', True),
+                ('company_id', '=', self.config.company_id.id)
+            ]
+            mappings = self.env['brevo.field.mapping'].search(mapping_domain)
+
+            for mapping in mappings:
+                brevo_key = mapping.brevo_field_name
+                odoo_field = mapping.odoo_field_name
+                if not brevo_key or not odoo_field:
+                    continue
+
+                if brevo_key not in attributes:
+                    continue
+
+                raw_value = attributes.get(brevo_key)
+                if raw_value in (None, ''):
+                    continue
+
+                # Convert value according to Odoo field type when possible
+                field_def = self.env['res.partner']._fields.get(odoo_field)
+                if not field_def:
+                    continue
+
+                converted = self._convert_brevo_value_for_field(raw_value, field_def)
+
+                # On update, optionally avoid overwriting non-empty values unless desired
+                if partner is not None:
+                    try:
+                        current = getattr(partner, odoo_field)
+                        if current not in (False, None, '') and str(current) == str(converted):
+                            continue
+                    except Exception:
+                        pass
+
+                vals[odoo_field] = converted
+
+        except Exception as map_exc:
+            _logger.warning(f"Failed to apply attribute mappings: {str(map_exc)}")
+
+    def _convert_brevo_value_for_field(self, value: Any, field_def) -> Any:
+        """Convert Brevo attribute value to match the Odoo field type.
+        Supports char/text, integer, float, boolean, date, datetime, selection.
+        """
+        ftype = getattr(field_def, 'type', 'char')
+        try:
+            if ftype in ('char', 'text', 'html'):  # html unlikely here
+                return '' if value is None else str(value)
+            if ftype == 'integer':
+                return int(value)
+            if ftype == 'float':
+                return float(value)
+            if ftype == 'boolean':
+                if isinstance(value, bool):
+                    return value
+                if isinstance(value, (int, float)):
+                    return bool(value)
+                val = str(value).strip().lower()
+                return val in ('1', 'true', 'yes', 'y')
+            if ftype == 'date':
+                # Accept ISO or date-only; return YYYY-MM-DD
+                try:
+                    dt = self._parse_brevo_datetime(value)
+                    if dt:
+                        return dt.date().isoformat()
+                except Exception:
+                    pass
+                s = str(value)
+                return s[:10] if len(s) >= 10 else s
+            if ftype == 'datetime':
+                dt = self._parse_brevo_datetime(value)
+                return dt and dt.strftime('%Y-%m-%d %H:%M:%S') or False
+            if ftype == 'selection':
+                # Keep raw string; expect mapping to align with allowed keys
+                return '' if value is None else str(value)
+            # Many2one / Many2many not expected for x_brevo_ defaults; fallback to string
+            return '' if value is None else str(value)
+        except Exception:
+            return '' if value is None else str(value)
     
     def sync_partner_to_brevo(self, partner) -> Dict[str, Any]:
         """Sync a single partner to Brevo"""
