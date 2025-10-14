@@ -5,9 +5,14 @@ access_brevo_contact_list_manager,brevo.contact.list.manager,model_brevo_contact
 access_brevo_contact_list_user,brevo.contact.list.user,model_brevo_contact_list,base.group_user,1,0,0,0
 access_brevo_sync_log_manager,brevo.sync.log.manager,model_brevo_sync_log,base.group_system,1,1,1,1
 access_brevo_sync_log_user,brevo.sync.log.user,model_brevo_sync_log,base.group_user,1,0,0,0
+access_brevo_sync_log_public,brevo.sync.log.public,model_brevo_sync_log,base.group_public,1,1,1,0
 access_brevo_config_wizard_manager,brevo.config.wizard.manager,model_brevo_config_wizard,base.group_system,1,1,1,1
 access_brevo_config_wizard_user,brevo.config.wizard.user,model_brevo_config_wizard,base.group_user,1,0,0,0
 access_brevo_field_mapping_manager,brevo.field.mapping.manager,model_brevo_field_mapping,base.group_system,1,1,1,1
 access_brevo_field_mapping_user,brevo.field.mapping.user,model_brevo_field_mapping,base.group_user,1,0,0,0
 access_brevo_field_discovery_manager,brevo.field.discovery.manager,model_brevo_field_discovery,base.group_system,1,1,1,1
 access_brevo_field_discovery_user,brevo.field.discovery.user,model_brevo_field_discovery,base.group_user,1,1,1,0
+access_brevo_delete_confirmation_wizard_manager,brevo.delete.confirmation.wizard.manager,model_brevo_delete_confirmation_wizard,base.group_system,1,1,1,1
+access_brevo_delete_confirmation_wizard_user,brevo.delete.confirmation.wizard.user,model_brevo_delete_confirmation_wizard,base.group_user,1,1,1,0
+access_res_partner_public,res.partner.public,model_res_partner,base.group_public,1,1,1,0
+access_crm_lead_public,crm.lead.public,model_crm_lead,base.group_public,1,1,1,0
