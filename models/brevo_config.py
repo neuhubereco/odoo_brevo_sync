@@ -206,40 +206,19 @@ class BrevoConfig(models.Model):
                 ('company_id', '=', self.company_id.id)
             ]).unlink()
 
-            # Create discovery records only for common field combinations
-            common_mappings = {
-                'FNAME': 'name',
-                'LNAME': 'name', 
-                'EMAIL': 'email',
-                'SMS': 'mobile',
-                'PHONE': 'phone',
-                'ADDRESS': 'street',
-                'CITY': 'city',
-                'ZIP': 'zip',
-                'COUNTRY': 'country_id',
-                'STATE': 'state_id',
-                'WEBSITE': 'website',
-                'COMPANY': 'parent_id',
-            }
-
-            discovery_count = 0
-            for brevo_attr in result.get('attributes', []):
-                brevo_name = brevo_attr['name']
-                if brevo_name in common_mappings:
-                    odoo_field_name = common_mappings[brevo_name]
-                    odoo_field = partner_model._fields.get(odoo_field_name)
+                # Create discovery records for all Brevo attributes
+                discovery_count = 0
+                for brevo_attr in result.get('attributes', []):
+                    brevo_name = brevo_attr['name']
                     
-                    if odoo_field:
-                        self.env['brevo.field.discovery'].create({
-                            'brevo_field_name': brevo_name,
-                            'brevo_field_type': brevo_attr.get('type', ''),
-                            'brevo_field_category': brevo_attr.get('category', ''),
-                            'odoo_field_name': odoo_field_name,
-                            'odoo_field_type': odoo_field.type,
-                            'odoo_field_string': odoo_field.string,
-                            'company_id': self.company_id.id,
-                        })
-                        discovery_count += 1
+                    # Create discovery record for each Brevo field
+                    self.env['brevo.field.discovery'].create({
+                        'brevo_field_name': brevo_name,
+                        'brevo_field_type': brevo_attr.get('type', ''),
+                        'brevo_field_category': brevo_attr.get('category', ''),
+                        'company_id': self.company_id.id,
+                    })
+                    discovery_count += 1
 
             return {
                 'type': 'ir.actions.client',
@@ -269,7 +248,7 @@ class BrevoConfig(models.Model):
             'name': 'Field Discovery',
             'res_model': 'brevo.field.discovery',
             'view_mode': 'list,form',
-            'target': 'new',
+            'target': 'current',
             'context': {'search_default_unmapped': 1}
         }
 
