@@ -251,8 +251,10 @@ class ResPartner(models.Model):
             attributes = brevo_data.get('attributes', {})
             
             # Create new partner
+            fname = attributes.get('VORNAME', '') or attributes.get('FNAME', '')
+            lname = attributes.get('NACHNAME', '') or attributes.get('LNAME', '')
             partner_vals = {
-                'name': f"{attributes.get('FNAME', '')} {attributes.get('LNAME', '')}".strip(),
+                'name': f"{fname} {lname}".strip() or brevo_data.get('email'),
                 'email': brevo_data.get('email'),
                 'mobile': attributes.get('SMS', ''),
                 'street': attributes.get('ADDRESS', ''),

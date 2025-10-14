@@ -140,13 +140,13 @@ class BrevoSyncService:
             
             attributes = brevo_contact.get('attributes', {})
             
-            # Create partner data with debug logging and alternative field names
-            fname = attributes.get('FNAME', '') or attributes.get('FIRSTNAME', '') or attributes.get('VORNAME', '')
-            lname = attributes.get('LNAME', '') or attributes.get('LASTNAME', '') or attributes.get('NACHNAME', '')
+            # Create partner data with correct field names for German Brevo
+            fname = attributes.get('VORNAME', '') or attributes.get('FNAME', '') or attributes.get('FIRSTNAME', '')
+            lname = attributes.get('NACHNAME', '') or attributes.get('LNAME', '') or attributes.get('LASTNAME', '')
             combined_name = f"{fname} {lname}".strip()
             partner_name = combined_name or email
             
-            _logger.info(f"Creating partner from Brevo: email={email}, FNAME='{fname}', LNAME='{lname}', combined_name='{combined_name}', final_name='{partner_name}'")
+            _logger.info(f"Creating partner from Brevo: email={email}, VORNAME='{fname}', NACHNAME='{lname}', combined_name='{combined_name}', final_name='{partner_name}'")
             _logger.info(f"Available attributes: {list(attributes.keys())}")
             
             partner_vals = {
@@ -245,11 +245,11 @@ class BrevoSyncService:
             
             # Update name if not set or if Brevo has better data
             if not partner.name or partner.name == partner.email:
-                fname = attributes.get('FNAME', '') or attributes.get('FIRSTNAME', '') or attributes.get('VORNAME', '')
-                lname = attributes.get('LNAME', '') or attributes.get('LASTNAME', '') or attributes.get('NACHNAME', '')
+                fname = attributes.get('VORNAME', '') or attributes.get('FNAME', '') or attributes.get('FIRSTNAME', '')
+                lname = attributes.get('NACHNAME', '') or attributes.get('LNAME', '') or attributes.get('LASTNAME', '')
                 combined_name = f"{fname} {lname}".strip()
                 
-                _logger.info(f"Updating partner name from Brevo: email={partner.email}, current_name='{partner.name}', FNAME='{fname}', LNAME='{lname}', combined_name='{combined_name}'")
+                _logger.info(f"Updating partner name from Brevo: email={partner.email}, current_name='{partner.name}', VORNAME='{fname}', NACHNAME='{lname}', combined_name='{combined_name}'")
                 _logger.info(f"Available attributes: {list(attributes.keys())}")
                 
                 if combined_name:

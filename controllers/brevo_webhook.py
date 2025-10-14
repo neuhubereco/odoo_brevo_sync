@@ -411,8 +411,10 @@ class BrevoWebhookController(http.Controller):
             }
             
             # Update basic fields if they're different
-            if attributes.get('FNAME') and attributes.get('LNAME'):
-                new_name = f"{attributes.get('FNAME')} {attributes.get('LNAME')}".strip()
+            fname = attributes.get('VORNAME', '') or attributes.get('FNAME', '')
+            lname = attributes.get('NACHNAME', '') or attributes.get('LNAME', '')
+            if fname and lname:
+                new_name = f"{fname} {lname}".strip()
                 if new_name and new_name != partner.name:
                     update_vals['name'] = new_name
             
