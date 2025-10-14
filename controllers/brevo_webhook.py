@@ -35,16 +35,8 @@ class BrevoWebhookController(http.Controller):
                 _logger.error(f"Failed to parse Brevo webhook data: {str(e)}")
                 return {'status': 'error', 'message': 'Invalid JSON data'}
             
-            # Log webhook receipt (skip if permission error)
-            try:
-                request.env['brevo.sync.log'].sudo().log_info(
-                    'webhook',
-                    'brevo_to_odoo',
-                    f'Received webhook from Brevo: {webhook_data.get("event", "unknown")}',
-                    details=json.dumps(webhook_data)
-                )
-            except Exception as log_error:
-                _logger.warning(f"Could not log webhook receipt: {str(log_error)}")
+            # Log webhook receipt (disabled for public user)
+            _logger.info(f"Received webhook from Brevo: {webhook_data.get('event', 'unknown')}")
             
             # Process webhook based on event type
             # ensure public user env
@@ -59,16 +51,8 @@ class BrevoWebhookController(http.Controller):
         except Exception as e:
             _logger.error(f"Brevo webhook processing failed: {str(e)}")
             
-            # Log error (skip if permission error)
-            try:
-                request.env['brevo.sync.log'].sudo().log_error(
-                    'webhook',
-                    'brevo_to_odoo',
-                    f'Webhook processing failed: {str(e)}',
-                    error_message=str(e)
-                )
-            except Exception as log_error:
-                _logger.warning(f"Could not log webhook error: {str(log_error)}")
+            # Log error (disabled for public user)
+            _logger.error(f"Webhook processing failed: {str(e)}")
             
             return {'status': 'error', 'message': 'Internal server error'}
 
