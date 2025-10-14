@@ -84,7 +84,9 @@ class CrmLead(models.Model):
                     'email': email,
                     'phone': contact_data.get('phone', ''),
                 }
-                partner = self.env['res.partner'].sudo().create(partner_vals)
+                # Use system user for partner creation to bypass permission issues
+                system_user = self.env.ref('base.user_root')
+                partner = self.env['res.partner'].with_user(system_user).create(partner_vals)
             
             # Extract booking information
             booking_time = normalized.get('startTime')
@@ -117,7 +119,9 @@ class CrmLead(models.Model):
             else:
                 lead_vals['type'] = 'lead'
             
-            lead = self.sudo().create(lead_vals)
+            # Use system user for lead creation to bypass permission issues
+            system_user = self.env.ref('base.user_root')
+            lead = self.with_user(system_user).create(lead_vals)
             
             # Log the creation (disabled for public user)
             _logger.info(f'Lead created from Brevo booking: {lead.name}')
