@@ -191,7 +191,13 @@ class BrevoSyncService:
                             partner_vals['state_id'] = state.id
             
             # Apply field mappings (Brevo -> Odoo), including x_brevo_ Felder
+            # But preserve the name field that was already set from FNAME + LNAME
+            original_name = partner_vals.get('name')
             self._apply_attribute_mappings_to_vals(attributes, partner_vals)
+            
+            # Restore the original name if it was overwritten by mappings
+            if original_name and original_name != partner_vals.get('name'):
+                partner_vals['name'] = original_name
 
             # Create the partner
             partner = self.env['res.partner'].create(partner_vals)
@@ -284,7 +290,13 @@ class BrevoSyncService:
                     brevo_list_records = brevo_lists.ids
             
             # Apply field mappings (Brevo -> Odoo), including x_brevo_ Felder
+            # But preserve the name field that was already set from FNAME + LNAME
+            original_name = update_vals.get('name')
             self._apply_attribute_mappings_to_vals(attributes, update_vals, partner=partner)
+            
+            # Restore the original name if it was overwritten by mappings
+            if original_name and original_name != update_vals.get('name'):
+                update_vals['name'] = original_name
 
             # Apply updates
             partner.write(update_vals)
