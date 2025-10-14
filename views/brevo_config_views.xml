@@ -323,12 +323,76 @@
         <field name="context">{'search_default_today': 1}</field>
     </record>
 
+    <!-- Brevo Dashboard View -->
+    <record id="view_brevo_dashboard" model="ir.ui.view">
+        <field name="name">brevo.dashboard</field>
+        <field name="model">brevo.config</field>
+        <field name="arch" type="xml">
+            <kanban string="Brevo Integration Dashboard">
+                <field name="name"/>
+                <field name="sync_status"/>
+                <field name="last_sync_contacts"/>
+                <field name="last_sync_lists"/>
+                <field name="error_message"/>
+                <field name="active"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_card oe_kanban_global_click">
+                            <div class="oe_kanban_content">
+                                <div class="oe_kanban_details">
+                                    <strong class="oe_kanban_title">
+                                        <field name="name"/>
+                                    </strong>
+                                    <div class="oe_kanban_tags_section">
+                                        <span class="oe_kanban_tag" t-att-class="record.sync_status.raw_value == 'success' and 'oe_kanban_tag_success' or record.sync_status.raw_value == 'error' and 'oe_kanban_tag_danger' or 'oe_kanban_tag_default'">
+                                            <field name="sync_status"/>
+                                        </span>
+                                    </div>
+                                    <ul>
+                                        <li>Last Contact Sync: <field name="last_sync_contacts"/></li>
+                                        <li>Last List Sync: <field name="last_sync_lists"/></li>
+                                    </ul>
+                                    <div class="oe_kanban_footer">
+                                        <div class="oe_kanban_footer_left">
+                                            <t t-if="record.active.raw_value">
+                                                <span>Active</span>
+                                            </t>
+                                            <t t-else="">
+                                                <span>Inactive</span>
+                                            </t>
+                                        </div>
+                                        <div class="oe_kanban_footer_right">
+                                            <button name="test_connection" string="Test" type="object" class="btn btn-sm btn-primary"/>
+                                        </div>
+                                    </div>
+                                    <div t-if="record.error_message.raw_value" class="oe_kanban_footer">
+                                        <div class="alert alert-danger" role="alert">
+                                            <field name="error_message"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
     <record id="action_brevo_dashboard" model="ir.actions.act_window">
         <field name="name">Brevo Dashboard</field>
         <field name="res_model">brevo.config</field>
-        <field name="view_mode">kanban</field>
+        <field name="view_mode">kanban,list,form</field>
         <field name="view_id" ref="view_brevo_dashboard"/>
         <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Welcome to Brevo Integration Dashboard!
+            </p><p>
+                This dashboard shows your Brevo configuration status and recent synchronization activities.
+                Click on a configuration card to manage settings or use the menu on the left to access different features.
+            </p>
+        </field>
     </record>
 
 </odoo>
