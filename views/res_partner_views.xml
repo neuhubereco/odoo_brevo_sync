@@ -78,7 +78,7 @@
                             <field name="x_brevo_company_email"/>
                         </group>
                     </group>
-                    <group string="Marketing & Engagement">
+                    <group string="Marketing &amp; Engagement">
                         <group>
                             <field name="x_brevo_source"/>
                             <field name="x_brevo_campaign"/>
@@ -92,7 +92,7 @@
                             <field name="x_brevo_landing_page"/>
                         </group>
                     </group>
-                    <group string="Subscription & Communication">
+                    <group string="Subscription &amp; Communication">
                         <group>
                             <field name="x_brevo_subscriber_type"/>
                             <field name="x_brevo_subscription_status"/>
@@ -120,7 +120,7 @@
                             <field name="x_brevo_custom_field_5"/>
                         </group>
                     </group>
-                    <group string="CRM & Sales">
+                    <group string="CRM &amp; Sales">
                         <group>
                             <field name="x_brevo_segment"/>
                             <field name="x_brevo_score"/>
@@ -137,7 +137,7 @@
                             <field name="x_brevo_budget"/>
                         </group>
                     </group>
-                    <group string="Interests & Demographics">
+                    <group string="Interests &amp; Demographics">
                         <group>
                             <field name="x_brevo_interest"/>
                             <field name="x_brevo_hobby"/>
@@ -157,7 +157,7 @@
                             <field name="x_brevo_preferred_contact_method"/>
                         </group>
                     </group>
-                    <group string="GDPR & Consent">
+                    <group string="GDPR &amp; Consent">
                         <group>
                             <field name="x_brevo_consent_date"/>
                             <field name="x_brevo_consent_source"/>
