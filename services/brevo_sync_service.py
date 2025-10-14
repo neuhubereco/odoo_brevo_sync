@@ -48,60 +48,81 @@ class BrevoSyncService:
         try:
             _logger.info("Starting contact synchronization...")
             
-            # Get contacts from Brevo
-            brevo_contacts_result = self.brevo_service.get_contacts(limit=100)
-            if not brevo_contacts_result.get('success'):
-                raise Exception(f"Failed to get contacts from Brevo: {brevo_contacts_result.get('error')}")
+            # Get contacts from Brevo in batches
+            batch_size = self.config.batch_size or 100
+            offset = 0
+            total_synced = 0
+            total_errors = 0
             
-            brevo_contacts = brevo_contacts_result.get('contacts', [])
-            _logger.info(f"Found {len(brevo_contacts)} contacts in Brevo")
-            
-            synced_count = 0
-            error_count = 0
-            
-            # Process each Brevo contact
-            for brevo_contact in brevo_contacts:
-                try:
-                    # Check if partner already exists
-                    email = brevo_contact.get('email')
-                    if not email:
-                        continue
-                    
-                    partner = self.env['res.partner'].search([('email', '=', email)], limit=1)
-                    
-                    if partner:
-                        # Update existing partner
-                        self._update_partner_from_brevo(partner, brevo_contact)
-                        _logger.info(f"Updated partner: {partner.display_name}")
-                    else:
-                        # Create new partner
-                        partner = self._create_partner_from_brevo(brevo_contact)
+            while True:
+                # Get batch of contacts from Brevo
+                brevo_contacts_result = self.brevo_service.get_contacts(limit=batch_size, offset=offset)
+                if not brevo_contacts_result.get('success'):
+                    raise Exception(f"Failed to get contacts from Brevo: {brevo_contacts_result.get('error')}")
+                
+                brevo_contacts = brevo_contacts_result.get('contacts', [])
+                if not brevo_contacts:
+                    break  # No more contacts
+                
+                _logger.info(f"Processing batch {offset//batch_size + 1}: {len(brevo_contacts)} contacts")
+                
+                batch_synced = 0
+                batch_errors = 0
+                
+                # Process each contact in this batch
+                for brevo_contact in brevo_contacts:
+                    try:
+                        # Check if partner already exists
+                        email = brevo_contact.get('email')
+                        if not email:
+                            continue
+                        
+                        partner = self.env['res.partner'].search([('email', '=', email)], limit=1)
+                        
                         if partner:
-                            _logger.info(f"Created new partner: {partner.display_name}")
-                    
-                    synced_count += 1
-                    
-                except Exception as e:
-                    error_count += 1
-                    _logger.error(f"Failed to sync contact {brevo_contact.get('email', 'unknown')}: {str(e)}")
-                    self.env['brevo.sync.log'].log_error(
-                        'sync_contact', 'brevo_to_odoo', f"Failed to sync contact {brevo_contact.get('email', 'unknown')}",
-                        error_message=str(e), brevo_id=brevo_contact.get('id'), config_id=self.config.id
-                    )
+                            # Update existing partner
+                            self._update_partner_from_brevo(partner, brevo_contact)
+                            _logger.info(f"Updated partner: {partner.display_name}")
+                        else:
+                            # Create new partner
+                            partner = self._create_partner_from_brevo(brevo_contact)
+                            if partner:
+                                _logger.info(f"Created new partner: {partner.display_name}")
+                        
+                        batch_synced += 1
+                        
+                    except Exception as e:
+                        batch_errors += 1
+                        _logger.error(f"Failed to sync contact {brevo_contact.get('email', 'unknown')}: {str(e)}")
+                        self.env['brevo.sync.log'].log_error(
+                            'sync_contact', 'brevo_to_odoo', f"Failed to sync contact {brevo_contact.get('email', 'unknown')}",
+                            error_message=str(e), brevo_id=brevo_contact.get('id'), config_id=self.config.id
+                        )
+                
+                total_synced += batch_synced
+                total_errors += batch_errors
+                offset += batch_size
+                
+                # Log batch progress
+                _logger.info(f"Batch completed: {batch_synced} synced, {batch_errors} errors")
+                
+                # Break if we got fewer contacts than requested (end of data)
+                if len(brevo_contacts) < batch_size:
+                    break
             
             # Update sync status
             self.config.last_sync_contacts = fields.Datetime.now()
             self.config.sync_status = 'success'
             self.config.error_message = False
             
-            message = f"Contact sync completed. Synced: {synced_count}, Errors: {error_count}"
+            message = f"Contact sync completed. Total synced: {total_synced}, Total errors: {total_errors}"
             _logger.info(message)
             
             return {
                 'success': True, 
                 'message': message,
-                'synced_count': synced_count,
-                'error_count': error_count
+                'synced_count': total_synced,
+                'error_count': total_errors
             }
             
         except Exception as e:
@@ -138,15 +159,19 @@ class BrevoSyncService:
             
             # Handle Brevo lists (map to Odoo categories)
             list_ids = brevo_contact.get('listIds', [])
+            brevo_list_records = []
             if list_ids:
                 # Find corresponding Odoo categories for Brevo lists
                 brevo_lists = self.env['brevo.contact.list'].search([
-                    ('brevo_id', 'in', [str(lid) for lid in list_ids])
+                    ('brevo_id', 'in', [str(lid) for lid in list_ids]),
+                    ('company_id', '=', self.config.company_id.id)
                 ])
                 if brevo_lists:
                     category_ids = brevo_lists.mapped('partner_category_id.id')
                     if category_ids:
                         partner_vals['category_id'] = [(6, 0, category_ids)]
+                    # Store Brevo list records for brevo_lists field
+                    brevo_list_records = brevo_lists.ids
             
             # Handle country if available
             country_name = attributes.get('COUNTRY')
@@ -167,6 +192,10 @@ class BrevoSyncService:
             
             # Create the partner
             partner = self.env['res.partner'].create(partner_vals)
+            
+            # Set Brevo lists after creation
+            if brevo_list_records:
+                partner.brevo_lists = [(6, 0, brevo_list_records)]
             
             # Log success
             self.env['brevo.sync.log'].log_success(
@@ -192,6 +221,10 @@ class BrevoSyncService:
                 'brevo_last_sync': fields.Datetime.now(),
                 'brevo_modified_date': self._parse_brevo_datetime(brevo_contact.get('modifiedAt')),
             }
+            
+            # Set created date if not already set
+            if not partner.brevo_created_date:
+                update_vals['brevo_created_date'] = self._parse_brevo_datetime(brevo_contact.get('createdAt'))
             
             # Update name if not set or if Brevo has better data
             if not partner.name or partner.name == partner.email:
@@ -230,10 +263,12 @@ class BrevoSyncService:
             
             # Handle Brevo lists (map to Odoo categories)
             list_ids = brevo_contact.get('listIds', [])
+            brevo_list_records = []
             if list_ids:
                 # Find corresponding Odoo categories for Brevo lists
                 brevo_lists = self.env['brevo.contact.list'].search([
-                    ('brevo_id', 'in', [str(lid) for lid in list_ids])
+                    ('brevo_id', 'in', [str(lid) for lid in list_ids]),
+                    ('company_id', '=', self.config.company_id.id)
                 ])
                 if brevo_lists:
                     category_ids = brevo_lists.mapped('partner_category_id.id')
@@ -242,9 +277,15 @@ class BrevoSyncService:
                         existing_categories = partner.category_id.ids
                         all_categories = list(set(existing_categories + category_ids))
                         update_vals['category_id'] = [(6, 0, all_categories)]
+                    # Store Brevo list records for brevo_lists field
+                    brevo_list_records = brevo_lists.ids
             
             # Apply updates
             partner.write(update_vals)
+            
+            # Update Brevo lists after write
+            if brevo_list_records:
+                partner.brevo_lists = [(6, 0, brevo_list_records)]
             
             # Log success
             self.env['brevo.sync.log'].log_success(
