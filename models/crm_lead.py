@@ -121,30 +121,16 @@ class CrmLead(models.Model):
             
             lead = self.create(lead_vals)
             
-            # Log the creation
-            self.env['brevo.sync.log'].log_success(
-                'lead_create',
-                'brevo_to_odoo',
-                f'Lead created from Brevo booking: {lead.name}',
-                lead_id=lead.id,
-                brevo_id=str(booking_data.get('id')),
-                details=str(booking_data)
-            )
+            # Log the creation (disabled for public user)
+            _logger.info(f'Lead created from Brevo booking: {lead.name}')
             
             return lead
             
         except Exception as e:
             _logger.error(f"Failed to create lead from Brevo booking: {str(e)}")
             
-            # Log the error
-            self.env['brevo.sync.log'].log_error(
-                'lead_create',
-                'brevo_to_odoo',
-                f'Failed to create lead from Brevo booking: {str(e)}',
-                error_message=str(e),
-                brevo_id=str(booking_data.get('id', '')),
-                details=str(booking_data)
-            )
+            # Log the error (disabled for public user)
+            _logger.error(f'Failed to create lead from Brevo booking: {str(e)}')
             
             raise ValidationError(_('Failed to create lead from Brevo booking: %s') % str(e))
 
