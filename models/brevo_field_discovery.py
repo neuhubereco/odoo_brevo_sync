@@ -127,6 +127,10 @@ class BrevoFieldDiscovery(models.Model):
             field_type = 'datetime'
         elif odoo_field.type == 'selection':
             field_type = 'selection'
+        elif odoo_field.type == 'many2one':
+            field_type = 'many2one'
+        elif odoo_field.type == 'many2many':
+            field_type = 'many2many'
 
         # Create mapping
         mapping_vals = {
@@ -138,4 +142,17 @@ class BrevoFieldDiscovery(models.Model):
         }
 
         mapping = self.env['brevo.field.mapping'].create(mapping_vals)
-        return mapping
+        
+        # Force refresh of computed fields
+        self.invalidate_recordset()
+        self.refresh()
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Mapping Created'),
+                'message': _('Field mapping for %s created successfully.') % self.brevo_field_name,
+                'type': 'success',
+            }
+        }
