@@ -25,6 +25,31 @@ else:
         </field>
     </record>
 
+    <!-- Server Action to create predefined mappings -->
+    <record id="action_create_predefined_mappings" model="ir.actions.server">
+        <field name="name">Create Predefined Mappings</field>
+        <field name="model_id" ref="model_brevo_config"/>
+        <field name="state">code</field>
+        <field name="code">
+# Get the first active Brevo configuration
+config = env['brevo.config'].search([('active', '=', True)], limit=1)
+if config:
+    result = config.create_predefined_mappings()
+    if result:
+        action = result
+else:
+    action = {
+        'type': 'ir.actions.client',
+        'tag': 'display_notification',
+        'params': {
+            'title': 'Error',
+            'message': 'No active Brevo configuration found',
+            'type': 'danger',
+        }
+    }
+        </field>
+    </record>
+
     <!-- Brevo Field Discovery Views -->
     <record id="view_brevo_field_discovery_tree" model="ir.ui.view">
         <field name="name">brevo.field.discovery.tree</field>
@@ -33,7 +58,7 @@ else:
             <list string="Brevo Field Discovery" multi_edit="1" create="true" edit="true">
                 <header>
                     <button name="%(action_create_all_brevo_fields)d" string="Create All Brevo Fields" type="action" class="btn btn-primary"/>
-                    <button name="create_predefined_mappings" string="Create Predefined Mappings" type="object" class="btn btn-success"/>
+                    <button name="%(action_create_predefined_mappings)d" string="Create Predefined Mappings" type="action" class="btn btn-success"/>
                 </header>
                 <field name="brevo_field_name" readonly="1"/>
                 <field name="brevo_field_type" readonly="1"/>
