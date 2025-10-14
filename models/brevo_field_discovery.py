@@ -70,7 +70,8 @@ class BrevoFieldDiscovery(models.Model):
         """Get available Odoo partner fields for selection"""
         try:
             partner_model = self.env['res.partner']
-            fields_list = []
+            # Always provide a placeholder to avoid Owl selection rendering issues
+            fields_list = [('', 'Select...')]
             
             # Add standard Odoo fields
             standard_fields = [
