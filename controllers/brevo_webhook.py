@@ -44,6 +44,8 @@ class BrevoWebhookController(http.Controller):
             )
             
             # Process webhook based on event type
+            # ensure public user env
+            request.env = request.env(user=request.env.ref('base.public_user').id)
             result = self._process_webhook(webhook_data)
             
             if result.get('success'):

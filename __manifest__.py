@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Brevo Connector',
-            'version': '18.0.1.0.43',
+            'version': '18.0.1.0.44',
     'category': 'CRM',
     'summary': 'Bidirectional synchronization between Odoo and Brevo (Sendinblue)',
     'description': """
