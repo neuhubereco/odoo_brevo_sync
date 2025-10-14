@@ -32,7 +32,8 @@ class BrevoFieldDiscovery(models.Model):
     odoo_field_name = fields.Selection(
         string='Odoo Field Name',
         selection='_get_odoo_field_selection',
-        help='Name of the corresponding field in Odoo (e.g., name, mobile, street)'
+        help='Name of the corresponding field in Odoo (e.g., name, mobile, street)',
+        default=False
     )
 
     odoo_field_type = fields.Char(
