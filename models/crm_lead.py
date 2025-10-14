@@ -63,10 +63,14 @@ class CrmLead(models.Model):
 
     @api.model
     def create_from_brevo_booking(self, booking_data):
-        """Create a new lead from Brevo booking data"""
+        """Create a new lead from Brevo booking/meeting data.
+        Supports both legacy payloads (contact/startTime/title/notes)
+        and the new Meeting/Phone webhook schema (meeting_name, event_participants, questions_and_answers).
+        """
         try:
-            # Extract contact information
-            contact_data = booking_data.get('contact', {})
+            # Normalize payload first
+            normalized = self._normalize_brevo_meeting_payload(booking_data)
+            contact_data = normalized.get('contact', {})
             email = contact_data.get('email')
             
             if not email:
@@ -76,14 +80,14 @@ class CrmLead(models.Model):
             partner = self.env['res.partner'].search([('email', '=', email)], limit=1)
             if not partner:
                 partner_vals = {
-                    'name': f"{contact_data.get('firstName', '')} {contact_data.get('lastName', '')}".strip(),
+                    'name': f"{contact_data.get('firstName', '')} {contact_data.get('lastName', '')}".strip() or email,
                     'email': email,
                     'phone': contact_data.get('phone', ''),
                 }
                 partner = self.env['res.partner'].create(partner_vals)
             
             # Extract booking information
-            booking_time = booking_data.get('startTime')
+            booking_time = normalized.get('startTime')
             if booking_time:
                 try:
                     booking_time = datetime.fromisoformat(booking_time.replace('Z', '+00:00'))
@@ -92,24 +96,24 @@ class CrmLead(models.Model):
             
             # Create lead
             lead_vals = {
-                'name': booking_data.get('title', _('Brevo Booking Lead')),
+                'name': normalized.get('title', _('Brevo Booking Lead')),
                 'partner_id': partner.id,
                 'email_from': email,
                 'phone': contact_data.get('phone', ''),
-                'description': booking_data.get('description', ''),
-                'brevo_lead_id': str(booking_data.get('id')),
+                'description': normalized.get('description', ''),
+                'brevo_lead_id': str(normalized.get('id')) if normalized.get('id') else False,
                 'brevo_source': 'booking',
-                'brevo_booking_id': str(booking_data.get('id')),
+                'brevo_booking_id': str(normalized.get('id')) if normalized.get('id') else False,
                 'brevo_booking_time': booking_time,
-                'brevo_booking_notes': booking_data.get('notes', ''),
-                'brevo_created_date': booking_data.get('createdAt'),
+                'brevo_booking_notes': normalized.get('notes', ''),
+                'brevo_created_date': normalized.get('createdAt'),
                 'brevo_sync_status': 'synced',
                 'brevo_last_sync': fields.Datetime.now(),
                 'stage_id': self._get_default_stage_id(),
             }
             
             # Set lead type based on booking type
-            booking_type = booking_data.get('type', '').lower()
+            booking_type = (normalized.get('type') or '').lower()
             if 'meeting' in booking_type or 'call' in booking_type:
                 lead_vals['type'] = 'opportunity'
             else:
@@ -143,6 +147,53 @@ class CrmLead(models.Model):
             )
             
             raise ValidationError(_('Failed to create lead from Brevo booking: %s') % str(e))
+
+    def _normalize_brevo_meeting_payload(self, payload):
+        """Return a normalized dict for booking/meeting payloads.
+        Handles structures with keys like meeting_name, event_participants, questions_and_answers.
+        """
+        # Legacy keys passthrough
+        title = payload.get('title') or payload.get('meeting_name')
+        start_time = payload.get('startTime') or payload.get('meeting_start_timestamp')
+        notes = payload.get('notes') or payload.get('meeting_notes') or ''
+
+        # Compose description: include questions_and_answers if present
+        description = payload.get('description') or ''
+        qa = payload.get('questions_and_answers') or []
+        if qa:
+            lines = [description] if description else []
+            lines.append(_('Questions and Answers:'))
+            for item in qa:
+                q = item.get('question')
+                a = item.get('answer')
+                if q or a:
+                    lines.append(f"Q: {q or ''}")
+                    lines.append(f"A: {a or ''}")
+            description = '\n'.join(lines).strip()
+
+        # Contact info
+        contact = payload.get('contact') or {}
+        participants = payload.get('event_participants') or []
+        if not contact and participants:
+            p = participants[0] or {}
+            contact = {
+                'email': p.get('EMAIL'),
+                'firstName': p.get('FIRSTNAME'),
+                'lastName': p.get('LASTNAME'),
+                'phone': payload.get('phone') or '',
+            }
+
+        normalized = {
+            'id': payload.get('id'),
+            'type': payload.get('type') or 'meeting',
+            'title': title,
+            'startTime': start_time,
+            'createdAt': payload.get('createdAt') or fields.Datetime.now(),
+            'notes': notes,
+            'description': description,
+            'contact': contact,
+        }
+        return normalized
 
     def _get_default_stage_id(self):
         """Get the default stage for new leads"""
@@ -240,24 +291,30 @@ class CrmLead(models.Model):
         try:
             event_type = webhook_data.get('event')
             
-            if event_type == 'booking.created':
+            if event_type in ('booking.created', 'meeting.booked'):
                 return self.create_from_brevo_booking(webhook_data.get('data', {}))
-            elif event_type == 'booking.updated':
+            elif event_type in ('booking.updated', 'meeting.started'):
                 # Update existing lead
-                brevo_booking_id = str(webhook_data.get('data', {}).get('id'))
+                data = webhook_data.get('data', {})
+                brevo_booking_id = str(data.get('id')) if data.get('id') else False
                 lead = self.search([('brevo_booking_id', '=', brevo_booking_id)], limit=1)
                 if lead:
                     # Update lead with new booking data
-                    booking_data = webhook_data.get('data', {})
-                    lead.write({
-                        'brevo_booking_time': booking_data.get('startTime'),
-                        'brevo_booking_notes': booking_data.get('notes', ''),
+                    booking_data = data
+                    normalized = self._normalize_brevo_meeting_payload(booking_data)
+                    updates = {
+                        'name': normalized.get('title') or lead.name,
+                        'brevo_booking_time': normalized.get('startTime') or lead.brevo_booking_time,
+                        'brevo_booking_notes': normalized.get('notes', '') or lead.brevo_booking_notes,
+                        'description': normalized.get('description') or lead.description,
                         'brevo_last_sync': fields.Datetime.now(),
-                    })
+                    }
+                    lead.write(updates)
                     return lead
-            elif event_type == 'booking.cancelled':
+            elif event_type in ('booking.cancelled', 'meeting.cancelled'):
                 # Handle booking cancellation
-                brevo_booking_id = str(webhook_data.get('data', {}).get('id'))
+                data = webhook_data.get('data', {})
+                brevo_booking_id = str(data.get('id')) if data.get('id') else False
                 lead = self.search([('brevo_booking_id', '=', brevo_booking_id)], limit=1)
                 if lead:
                     # Mark lead as lost or update stage
@@ -266,6 +323,10 @@ class CrmLead(models.Model):
                         lead.stage_id = lost_stage.id
                     lead.brevo_last_sync = fields.Datetime.now()
                     return lead
+            elif event_type == 'call.finished':
+                # Create/Update a lead from finished call event
+                data = webhook_data.get('data', {})
+                return self.create_from_brevo_booking(data)
             
             return False
             
