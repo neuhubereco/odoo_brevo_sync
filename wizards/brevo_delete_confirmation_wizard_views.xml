@@ -29,7 +29,7 @@
                     
                     <footer>
                         <button name="action_confirm_delete" string="Delete" type="object" class="btn btn-danger" 
-                                attrs="{'invisible': [('confirmation_text', '!=', 'DELETE')]}"/>
+                                invisible="confirmation_text != 'DELETE'"/>
                         <button name="action_cancel" string="Cancel" type="object" class="btn btn-secondary"/>
                     </footer>
                 </form>
