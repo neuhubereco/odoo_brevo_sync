@@ -140,9 +140,17 @@ class BrevoSyncService:
             
             attributes = brevo_contact.get('attributes', {})
             
-            # Create partner data
+            # Create partner data with debug logging and alternative field names
+            fname = attributes.get('FNAME', '') or attributes.get('FIRSTNAME', '') or attributes.get('VORNAME', '')
+            lname = attributes.get('LNAME', '') or attributes.get('LASTNAME', '') or attributes.get('NACHNAME', '')
+            combined_name = f"{fname} {lname}".strip()
+            partner_name = combined_name or email
+            
+            _logger.info(f"Creating partner from Brevo: email={email}, FNAME='{fname}', LNAME='{lname}', combined_name='{combined_name}', final_name='{partner_name}'")
+            _logger.info(f"Available attributes: {list(attributes.keys())}")
+            
             partner_vals = {
-                'name': f"{attributes.get('FNAME', '')} {attributes.get('LNAME', '')}".strip() or email,
+                'name': partner_name,
                 'email': email,
                 'brevo_id': str(brevo_contact.get('id')),
                 'brevo_sync_status': 'synced',
@@ -237,9 +245,15 @@ class BrevoSyncService:
             
             # Update name if not set or if Brevo has better data
             if not partner.name or partner.name == partner.email:
-                name = f"{attributes.get('FNAME', '')} {attributes.get('LNAME', '')}".strip()
-                if name:
-                    update_vals['name'] = name
+                fname = attributes.get('FNAME', '') or attributes.get('FIRSTNAME', '') or attributes.get('VORNAME', '')
+                lname = attributes.get('LNAME', '') or attributes.get('LASTNAME', '') or attributes.get('NACHNAME', '')
+                combined_name = f"{fname} {lname}".strip()
+                
+                _logger.info(f"Updating partner name from Brevo: email={partner.email}, current_name='{partner.name}', FNAME='{fname}', LNAME='{lname}', combined_name='{combined_name}'")
+                _logger.info(f"Available attributes: {list(attributes.keys())}")
+                
+                if combined_name:
+                    update_vals['name'] = combined_name
             
             # Update other fields if they're empty
             if not partner.mobile and attributes.get('SMS'):
