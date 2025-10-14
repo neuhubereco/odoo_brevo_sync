@@ -36,7 +36,7 @@ class BrevoWebhookController(http.Controller):
                 return {'status': 'error', 'message': 'Invalid JSON data'}
             
             # Log webhook receipt
-            request.env['brevo.sync.log'].log_info(
+            request.env['brevo.sync.log'].sudo().log_info(
                 'webhook',
                 'brevo_to_odoo',
                 f'Received webhook from Brevo: {webhook_data.get("event", "unknown")}',
@@ -58,7 +58,7 @@ class BrevoWebhookController(http.Controller):
             
             # Log error
             try:
-                request.env['brevo.sync.log'].log_error(
+                request.env['brevo.sync.log'].sudo().log_error(
                     'webhook',
                     'brevo_to_odoo',
                     f'Webhook processing failed: {str(e)}',
@@ -106,6 +106,8 @@ class BrevoWebhookController(http.Controller):
                 return {'status': 'error', 'message': 'Invalid signature'}
             data = json.loads(raw.decode('utf-8'))
             # Ensure env user is public for anonymous calls
+            request.env = request.env(user=request.env.ref('base.public_user').id)
+            # set env to public for all model operations
             request.env = request.env(user=request.env.ref('base.public_user').id)
             result = self._handle_booking_webhook(data.get('event') or 'booking.created', data.get('data') or data)
             return {'status': 'success' if result.get('success') else 'error', 'message': result.get('message') or result.get('error')}
