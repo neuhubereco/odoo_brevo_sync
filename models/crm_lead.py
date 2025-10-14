@@ -99,7 +99,6 @@ class CrmLead(models.Model):
                 'name': normalized.get('title', _('Brevo Booking Lead')),
                 'partner_id': partner.id,
                 'email_from': email,
-                'phone': contact_data.get('phone', ''),
                 'description': normalized.get('description', ''),
                 'brevo_lead_id': str(normalized.get('id')) if normalized.get('id') else False,
                 'brevo_source': 'booking',
@@ -109,7 +108,6 @@ class CrmLead(models.Model):
                 'brevo_created_date': normalized.get('createdAt'),
                 'brevo_sync_status': 'synced',
                 'brevo_last_sync': fields.Datetime.now(),
-                'stage_id': self._get_default_stage_id(),
             }
             
             # Set lead type based on booking type
