@@ -92,7 +92,9 @@ class CrmLead(models.Model):
             booking_time = normalized.get('startTime')
             if booking_time:
                 try:
-                    booking_time = datetime.fromisoformat(booking_time.replace('Z', '+00:00'))
+                    # Convert to naive datetime for Odoo
+                    dt = datetime.fromisoformat(booking_time.replace('Z', '+00:00'))
+                    booking_time = dt.replace(tzinfo=None)  # Make naive
                 except (ValueError, AttributeError):
                     booking_time = False
             
