@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Brevo Connector',
-            'version': '18.0.1.0.27',
+            'version': '18.0.1.0.28',
     'category': 'CRM',
     'summary': 'Bidirectional synchronization between Odoo and Brevo (Sendinblue)',
     'description': """
@@ -52,7 +52,6 @@ Technical Details:
             'data': [
                 'security/ir.model.access.csv',
                 'security/brevo_security.xml',
-                'data/brevo_fields_data.xml',
                 'data/ir_cron_data.xml',
                 'data/ir_config_parameter_data.xml',
                 'views/brevo_config_views.xml',
