@@ -216,6 +216,33 @@ class BrevoFieldDiscovery(models.Model):
                 self.odoo_field_type = field_obj.type
                 self.odoo_field_string = field_obj.string
 
+    # -- Sanitization utilities to prevent Owl selection errors --
+    def _sanitize_invalid_odoo_field_values(self):
+        """Reset odoo_field_name to False if current value is not in selection list."""
+        try:
+            valid = {key for key, _ in self._get_odoo_field_selection()}
+            for rec in self:
+                if rec.odoo_field_name and rec.odoo_field_name not in valid:
+                    rec.odoo_field_name = False
+        except Exception:
+            for rec in self:
+                rec.odoo_field_name = False
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        records._sanitize_invalid_odoo_field_values()
+        return records
+
+    def write(self, vals):
+        res = super().write(vals)
+        self._sanitize_invalid_odoo_field_values()
+        return res
+
+    def read(self, fields=None, load='_classic_read'):
+        self._sanitize_invalid_odoo_field_values()
+        return super().read(fields=fields, load=load)
+
     @api.depends('brevo_field_name', 'odoo_field_name')
     def _compute_is_mapped(self):
         """Compute if this field combination is mapped"""
