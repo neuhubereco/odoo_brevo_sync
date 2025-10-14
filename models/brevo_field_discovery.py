@@ -189,8 +189,18 @@ class BrevoFieldDiscovery(models.Model):
             for field_name, field_label in brevo_fields:
                 if field_name in partner_model._fields:
                     fields_list.append((field_name, f"{field_name} ({field_label})"))
-            
-            return fields_list
+
+            # Deduplicate defensively to avoid malformed selections
+            seen = set()
+            unique_fields = []
+            for val, lab in fields_list:
+                key = (val, lab)
+                if key in seen:
+                    continue
+                seen.add(key)
+                unique_fields.append((val, lab))
+
+            return unique_fields
             
         except Exception as e:
             _logger.error(f"Error getting Odoo field selection: {str(e)}")
@@ -213,7 +223,6 @@ class BrevoFieldDiscovery(models.Model):
             if record.brevo_field_name and record.odoo_field_name:
                 mapping = self.env['brevo.field.mapping'].search([
                     ('brevo_field_name', '=', record.brevo_field_name),
-                    ('odoo_field_name', '=', record.odoo_field_name),
                     ('company_id', '=', record.company_id.id)
                 ], limit=1)
                 record.is_mapped = bool(mapping)
@@ -252,27 +261,48 @@ class BrevoFieldDiscovery(models.Model):
         elif odoo_field.type == 'many2many':
             field_type = 'many2many'
 
-        # Create mapping
-        mapping_vals = {
-            'name': f'{self.brevo_field_name} -> {self.odoo_field_name}',
-            'brevo_field_name': self.brevo_field_name,
-            'odoo_field_name': self.odoo_field_name,
-            'field_type': field_type,
-            'company_id': self.company_id.id,
-        }
+        # Upsert mapping: update existing (by brevo_field + company) or create
+        Mapping = self.env['brevo.field.mapping']
+        existing = Mapping.search([
+            ('brevo_field_name', '=', self.brevo_field_name),
+            ('company_id', '=', self.company_id.id)
+        ], limit=1)
 
-        mapping = self.env['brevo.field.mapping'].create(mapping_vals)
-        
+        if existing:
+            updates = {}
+            if existing.odoo_field_name != self.odoo_field_name:
+                updates['odoo_field_name'] = self.odoo_field_name
+            if existing.field_type != field_type:
+                updates['field_type'] = field_type
+            desired_name = f'{self.brevo_field_name} -> {self.odoo_field_name}'
+            if existing.name != desired_name:
+                updates['name'] = desired_name
+            if existing.active is False:
+                updates['active'] = True
+            if updates:
+                existing.write(updates)
+            mapping = existing
+        else:
+            mapping_vals = {
+                'name': f'{self.brevo_field_name} -> {self.odoo_field_name}',
+                'brevo_field_name': self.brevo_field_name,
+                'odoo_field_name': self.odoo_field_name,
+                'field_type': field_type,
+                'active': True,
+                'company_id': self.company_id.id,
+            }
+            mapping = Mapping.create(mapping_vals)
+
         # Force refresh of computed fields
         self.invalidate_recordset()
         self.refresh()
-        
+
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
-                'title': _('Mapping Created'),
-                'message': _('Field mapping for %s created successfully.') % self.brevo_field_name,
+                'title': _('Mapping Saved'),
+                'message': _('%s mapped to %s') % (self.brevo_field_name, self.odoo_field_name),
                 'type': 'success',
             }
         }
