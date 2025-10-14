@@ -137,6 +137,27 @@ class ResPartner(models.Model):
         
         return result
 
+    def unlink(self):
+        """Override unlink to handle Brevo sync and ask for confirmation"""
+        # Check if any partners have Brevo IDs
+        brevo_partners = self.filtered(lambda p: p.brevo_id and p.email)
+        
+        if brevo_partners:
+            # Show confirmation dialog
+            return {
+                'type': 'ir.actions.act_window',
+                'name': _('Confirm Deletion'),
+                'res_model': 'brevo.delete.confirmation.wizard',
+                'view_mode': 'form',
+                'target': 'new',
+                'context': {
+                    'default_partner_ids': [(6, 0, self.ids)],
+                    'default_brevo_partner_count': len(brevo_partners),
+                }
+            }
+        
+        return super().unlink()
+
     def sync_to_brevo(self):
         """Manually sync this partner to Brevo"""
         try:

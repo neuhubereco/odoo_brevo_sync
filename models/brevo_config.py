@@ -243,13 +243,28 @@ class BrevoConfig(models.Model):
 
     def action_open_field_discovery(self):
         """Open Field Discovery window"""
+        self.ensure_one()
+        
+        # Ensure discovery records exist for this company
+        existing_records = self.env['brevo.field.discovery'].search([
+            ('company_id', '=', self.company_id.id)
+        ])
+        
+        if not existing_records:
+            # Create discovery records if none exist
+            self.discover_fields()
+        
         return {
             'type': 'ir.actions.act_window',
             'name': 'Field Discovery',
             'res_model': 'brevo.field.discovery',
             'view_mode': 'list,form',
             'target': 'current',
-            'context': {'search_default_unmapped': 1}
+            'context': {
+                'default_company_id': self.company_id.id,
+                'search_default_company_id': self.company_id.id,
+            },
+            'domain': [('company_id', '=', self.company_id.id)],
         }
 
     def create_all_brevo_fields(self):

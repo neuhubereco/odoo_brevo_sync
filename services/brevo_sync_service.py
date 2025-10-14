@@ -22,6 +22,27 @@ class BrevoSyncService:
         self.brevo_service = BrevoService(config.api_key)
         self.env = config.env
     
+    def _parse_brevo_datetime(self, date_string):
+        """Parse Brevo datetime string to Odoo datetime format"""
+        if not date_string:
+            return None
+        
+        try:
+            # Handle different Brevo datetime formats
+            if 'T' in date_string:
+                # ISO format with timezone
+                if '+' in date_string or 'Z' in date_string:
+                    # Remove timezone info for Odoo
+                    date_string = date_string.split('+')[0].split('Z')[0]
+                # Parse ISO format
+                return datetime.fromisoformat(date_string.replace('T', ' '))
+            else:
+                # Simple date format
+                return datetime.strptime(date_string, '%Y-%m-%d')
+        except Exception as e:
+            _logger.warning(f"Failed to parse datetime '{date_string}': {str(e)}")
+            return None
+    
     def sync_contacts(self) -> Dict[str, Any]:
         """Synchronize contacts between Odoo and Brevo"""
         try:
@@ -105,8 +126,8 @@ class BrevoSyncService:
                 'brevo_id': str(brevo_contact.get('id')),
                 'brevo_sync_status': 'synced',
                 'brevo_last_sync': fields.Datetime.now(),
-                'brevo_created_date': brevo_contact.get('createdAt'),
-                'brevo_modified_date': brevo_contact.get('modifiedAt'),
+                'brevo_created_date': self._parse_brevo_datetime(brevo_contact.get('createdAt')),
+                'brevo_modified_date': self._parse_brevo_datetime(brevo_contact.get('modifiedAt')),
                 'mobile': attributes.get('SMS', ''),
                 'phone': attributes.get('PHONE', ''),
                 'street': attributes.get('ADDRESS', ''),
@@ -169,7 +190,7 @@ class BrevoSyncService:
                 'brevo_id': str(brevo_contact.get('id')),
                 'brevo_sync_status': 'synced',
                 'brevo_last_sync': fields.Datetime.now(),
-                'brevo_modified_date': brevo_contact.get('modifiedAt'),
+                'brevo_modified_date': self._parse_brevo_datetime(brevo_contact.get('modifiedAt')),
             }
             
             # Update name if not set or if Brevo has better data
@@ -238,9 +259,77 @@ class BrevoSyncService:
     def sync_partner_to_brevo(self, partner) -> Dict[str, Any]:
         """Sync a single partner to Brevo"""
         try:
-            # Implementation for single partner sync
-            # This would contain the existing partner sync logic
-            return {'success': True, 'message': 'Partner synchronized successfully'}
+            if not partner.email:
+                return {'success': False, 'error': 'Partner has no email address'}
+            
+            # Get field mappings
+            field_mappings = self.env['brevo.field.mapping'].search([
+                ('active', '=', True),
+                ('company_id', '=', self.config.company_id.id)
+            ])
+            
+            # Prepare Brevo contact data
+            brevo_contact_data = {
+                'email': partner.email,
+                'attributes': {}
+            }
+            
+            # Apply field mappings
+            for mapping in field_mappings:
+                try:
+                    value = mapping.get_field_value_from_odoo(partner)
+                    if value is not None:
+                        brevo_contact_data['attributes'][mapping.brevo_field_name] = value
+                except Exception as e:
+                    _logger.warning(f"Failed to map field {mapping.brevo_field_name}: {str(e)}")
+                    continue
+            
+            # Handle partner categories (map to Brevo lists)
+            if partner.category_id:
+                brevo_list_ids = []
+                for category in partner.category_id:
+                    # Find corresponding Brevo list
+                    brevo_list = self.env['brevo.contact.list'].search([
+                        ('partner_category_id', '=', category.id),
+                        ('company_id', '=', self.config.company_id.id)
+                    ], limit=1)
+                    if brevo_list and brevo_list.brevo_id:
+                        brevo_list_ids.append(int(brevo_list.brevo_id))
+                
+                if brevo_list_ids:
+                    brevo_contact_data['listIds'] = brevo_list_ids
+            
+            # Create or update contact in Brevo
+            if partner.brevo_id:
+                # Update existing contact
+                result = self.brevo_service.update_contact(partner.brevo_id, brevo_contact_data)
+            else:
+                # Create new contact
+                result = self.brevo_service.create_contact(brevo_contact_data)
+            
+            if result.get('success'):
+                # Update partner with Brevo ID
+                if not partner.brevo_id and result.get('contact_id'):
+                    partner.brevo_id = str(result.get('contact_id'))
+                
+                partner.brevo_sync_status = 'synced'
+                partner.brevo_last_sync = fields.Datetime.now()
+                
+                # Log success
+                self.env['brevo.sync.log'].log_success(
+                    'sync_partner', 'odoo_to_brevo', f"Synced partner {partner.display_name} to Brevo",
+                    partner_id=partner.id, brevo_id=partner.brevo_id, config_id=self.config.id
+                )
+                
+                return {'success': True, 'message': 'Partner synchronized successfully'}
+            else:
+                # Log error
+                self.env['brevo.sync.log'].log_error(
+                    'sync_partner', 'odoo_to_brevo', f"Failed to sync partner {partner.display_name} to Brevo",
+                    error_message=result.get('error'), partner_id=partner.id, config_id=self.config.id
+                )
+                return {'success': False, 'error': result.get('error')}
+                
         except Exception as e:
             _logger.error(f"Partner sync failed: {str(e)}")
             return {'success': False, 'error': str(e)}
@@ -306,7 +395,8 @@ class BrevoSyncService:
                     
                     # Create or update brevo.contact.list record
                     brevo_list_record = self.env['brevo.contact.list'].search([
-                        ('brevo_id', '=', str(list_id))
+                        ('brevo_id', '=', str(list_id)),
+                        ('company_id', '=', self.config.company_id.id)
                     ], limit=1)
                     
                     if not brevo_list_record:
@@ -315,6 +405,14 @@ class BrevoSyncService:
                             'brevo_id': str(list_id),
                             'partner_category_id': category.id,
                             'unique_subscribers': brevo_list.get('uniqueSubscribers', 0),
+                            'total_blacklisted': brevo_list.get('totalBlacklisted', 0),
+                            'total_unsubscribers': brevo_list.get('totalUnsubscribers', 0),
+                            'description': brevo_list.get('description', ''),
+                            'folder_id': str(brevo_list.get('folderId', '')),
+                            'created_at': self._parse_brevo_datetime(brevo_list.get('createdAt')),
+                            'updated_at': self._parse_brevo_datetime(brevo_list.get('updatedAt')),
+                            'sync_status': 'synced',
+                            'last_sync': fields.Datetime.now(),
                             'company_id': self.config.company_id.id,
                         })
                         _logger.info(f"Created brevo.contact.list record: {list_name}")
@@ -324,6 +422,13 @@ class BrevoSyncService:
                             'name': list_name,
                             'partner_category_id': category.id,
                             'unique_subscribers': brevo_list.get('uniqueSubscribers', 0),
+                            'total_blacklisted': brevo_list.get('totalBlacklisted', 0),
+                            'total_unsubscribers': brevo_list.get('totalUnsubscribers', 0),
+                            'description': brevo_list.get('description', ''),
+                            'folder_id': str(brevo_list.get('folderId', '')),
+                            'updated_at': self._parse_brevo_datetime(brevo_list.get('updatedAt')),
+                            'sync_status': 'synced',
+                            'last_sync': fields.Datetime.now(),
                         })
                         _logger.info(f"Updated brevo.contact.list record: {list_name}")
                     
