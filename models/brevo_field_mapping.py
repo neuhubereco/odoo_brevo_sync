@@ -218,7 +218,27 @@ class BrevoFieldMapping(models.Model):
         
         try:
             if hasattr(partner, self.odoo_field_name):
-                return getattr(partner, self.odoo_field_name)
+                value = getattr(partner, self.odoo_field_name)
+                
+                # Convert Odoo objects to strings for Brevo API
+                if hasattr(value, 'name'):
+                    # Many2one fields (e.g., title, country_id, state_id)
+                    return value.name
+                elif hasattr(value, 'display_name'):
+                    # Other relational fields
+                    return value.display_name
+                elif isinstance(value, (list, tuple)):
+                    # Many2many fields - join with comma
+                    return ', '.join([item.name if hasattr(item, 'name') else str(item) for item in value])
+                elif value is False:
+                    # Boolean False
+                    return False
+                elif value is True:
+                    # Boolean True
+                    return True
+                else:
+                    # String, number, or other simple types
+                    return value
             else:
                 # Try to get from dynamic fields JSON
                 if partner.brevo_dynamic_fields:
