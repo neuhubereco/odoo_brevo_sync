@@ -252,6 +252,56 @@ class BrevoConfig(models.Model):
             'context': {'search_default_unmapped': 1}
         }
 
+    def create_all_brevo_fields(self):
+        """Create all Brevo fields manually if discover_fields didn't work"""
+        try:
+            from ..services.brevo_service import BrevoService
+            service = BrevoService(self.api_key or 'dummy')
+            result = service.get_all_contact_attributes()
+
+            if not result.get('success'):
+                raise UserError(_('Failed to get Brevo fields: %s') % result.get('error', 'Unknown error'))
+
+            # Clear existing discovery records for this company
+            self.env['brevo.field.discovery'].search([
+                ('company_id', '=', self.company_id.id)
+            ]).unlink()
+
+            # Create discovery records for all Brevo attributes
+            discovery_count = 0
+            for brevo_attr in result.get('attributes', []):
+                brevo_name = brevo_attr['name']
+                
+                # Create discovery record for each Brevo field
+                self.env['brevo.field.discovery'].create({
+                    'brevo_field_name': brevo_name,
+                    'brevo_field_type': brevo_attr.get('type', ''),
+                    'brevo_field_category': brevo_attr.get('category', ''),
+                    'company_id': self.company_id.id,
+                })
+                discovery_count += 1
+
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('All Brevo Fields Created'),
+                    'message': _('Created %d Brevo field discovery records') % discovery_count,
+                    'type': 'success',
+                }
+            }
+        except Exception as e:
+            _logger.error(f"Failed to create all Brevo fields: {str(e)}")
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Error'),
+                    'message': str(e),
+                    'type': 'danger',
+                }
+            }
+
     def manual_sync_contacts(self):
         """Trigger manual synchronization of contacts"""
         try:
