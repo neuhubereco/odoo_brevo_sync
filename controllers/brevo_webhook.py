@@ -180,7 +180,7 @@ class BrevoWebhookController(http.Controller):
                 return self._handle_contact_webhook(event_type, event_data)
             elif event_type.startswith('list.'):
                 return self._handle_list_webhook(event_type, event_data)
-            elif event_type.startswith('booking.'):
+            elif event_type.startswith('booking.') or event_type.startswith('meeting.') or event_type.startswith('call.'):
                 return self._handle_booking_webhook(event_type, event_data)
             else:
                 _logger.warning(f"Unhandled webhook event type: {event_type}")
@@ -345,9 +345,15 @@ class BrevoWebhookController(http.Controller):
     def _handle_booking_webhook(self, event_type, event_data):
         """Handle booking-related webhooks"""
         try:
+            # Normalize event_type for internal handling
+            if event_type.startswith('meeting.'):
+                event_type = event_type.replace('meeting.', 'booking.')
+            elif event_type.startswith('call.'):
+                event_type = event_type.replace('call.', 'booking.')  # Treat calls as bookings for lead creation
+            
             if event_type == 'booking.created':
                 return self._handle_booking_created(event_data)
-            elif event_type == 'booking.updated':
+            elif event_type == 'booking.updated' or event_type == 'booking.started':  # Treat started as updated
                 return self._handle_booking_updated(event_data)
             elif event_type == 'booking.cancelled':
                 return self._handle_booking_cancelled(event_data)
