@@ -230,11 +230,14 @@ class BrevoFieldMapping(models.Model):
                 elif isinstance(value, (list, tuple)):
                     # Many2many fields - join with comma
                     return ', '.join([item.name if hasattr(item, 'name') else str(item) for item in value])
+                elif isinstance(value, fields.Date):
+                    # Convert Odoo date to ISO string
+                    return value.isoformat()
+                elif isinstance(value, fields.Datetime):
+                    return value.isoformat()
                 elif value is False:
-                    # Boolean False
                     return False
                 elif value is True:
-                    # Boolean True
                     return True
                 else:
                     # String, number, or other simple types

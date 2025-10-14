@@ -32,9 +32,10 @@ class BrevoService:
         
         # Initialize API clients
         self.contacts_api = brevo_python.ContactsApi(brevo_python.ApiClient(self.configuration))
-        # Note: ListsApi and AttributesApi not available in current brevo-python version
-        # Using ContactsApi for lists functionality
-        self.lists_api = brevo_python.ContactsApi(brevo_python.ApiClient(self.configuration))
+        # Use dedicated ListsApi if available
+        self.lists_api = getattr(brevo_python, 'ListsApi', brevo_python.ContactsApi)(
+            brevo_python.ApiClient(self.configuration)
+        )
         self.webhooks_api = brevo_python.WebhooksApi(brevo_python.ApiClient(self.configuration))
         
         # Rate limiting
@@ -419,7 +420,7 @@ class BrevoService:
         try:
             self._rate_limit()
             
-            remove_contacts = brevo_python.RemoveContactToList(
+            remove_contacts = getattr(brevo_python, 'RemoveContactFromList', brevo_python.RemoveContactToList)(
                 emails=contact_ids
             )
             
