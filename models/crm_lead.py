@@ -84,7 +84,7 @@ class CrmLead(models.Model):
                     'email': email,
                     'phone': contact_data.get('phone', ''),
                 }
-                partner = self.env['res.partner'].create(partner_vals)
+                partner = self.env['res.partner'].sudo().create(partner_vals)
             
             # Extract booking information
             booking_time = normalized.get('startTime')
@@ -117,7 +117,7 @@ class CrmLead(models.Model):
             else:
                 lead_vals['type'] = 'lead'
             
-            lead = self.create(lead_vals)
+            lead = self.sudo().create(lead_vals)
             
             # Log the creation (disabled for public user)
             _logger.info(f'Lead created from Brevo booking: {lead.name}')
