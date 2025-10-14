@@ -115,26 +115,15 @@ class ResPartner(models.Model):
     def create(self, vals_list):
         """Override create to handle Brevo sync"""
         partners = super().create(vals_list)
-        
-        # Mark partners with email for Brevo sync
-        for partner in partners:
-            if partner.email and partner.is_company is False:
-                partner.brevo_sync_status = 'pending'
-                partner.brevo_sync_needed = True
-        
+        # Hinweis: Odoo -> Brevo Sync erfolgt ausschließlich manuell per Button
+        # Keine automatische Markierung mehr
         return partners
 
     def write(self, vals):
         """Override write to handle Brevo sync"""
         result = super().write(vals)
-        
-        # Mark partners with email changes for Brevo sync
-        if 'email' in vals:
-            for partner in self:
-                if partner.email and partner.is_company is False:
-                    partner.brevo_sync_status = 'pending'
-                    partner.brevo_sync_needed = True
-        
+        # Hinweis: Odoo -> Brevo Sync erfolgt ausschließlich manuell per Button
+        # Keine automatische Markierung mehr
         return result
 
     def unlink(self):

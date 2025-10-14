@@ -23,6 +23,7 @@ class BrevoSyncLog(models.Model):
         ('sync_contact', 'Sync Contact'),
         ('create_partner', 'Create Partner'),
         ('update_partner', 'Update Partner'),
+        ('sync_partner', 'Sync Partner'),
         ('list_create', 'Create List'),
         ('list_update', 'Update List'),
         ('list_delete', 'Delete List'),
