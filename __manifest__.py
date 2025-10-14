@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Brevo Connector',
-            'version': '18.0.1.0.53',
+            'version': '18.0.1.1.0',
     'category': 'CRM',
     'summary': 'Bidirectional synchronization between Odoo and Brevo (Sendinblue)',
     'description': """
@@ -13,7 +13,8 @@ This module provides bidirectional synchronization between Odoo and Brevo (forme
 * **Contact Synchronization**: Sync Odoo res.partner records with Brevo contacts
 * **List Synchronization**: Map Odoo partner categories to Brevo contact lists
 * **CRM Lead Creation**: Automatically create CRM leads from Brevo bookings/appointments
-* **Webhook Support**: Real-time updates via webhooks
+* **Webhook Support**: Real-time updates via webhooks (meeting.created, contact.*, list.*)
+* **Meeting Integration**: Full support for Brevo meeting/call webhooks with participant data
 * **Configurable Sync**: Customizable sync intervals and field mappings
 
 Features:
@@ -21,7 +22,9 @@ Features:
 - Bidirectional contact sync (name, email, phone, address)
 - Partner category to Brevo list mapping
 - Automatic CRM lead creation from Brevo bookings
-- Webhook endpoints for real-time updates
+- Webhook endpoints for real-time updates (/brevo/webhook, /brevo/booking)
+- Meeting/call webhook processing with participant data
+- Questions and answers integration in CRM leads
 - Configurable sync intervals
 - Error logging and status dashboard
 - Batch processing for large datasets
