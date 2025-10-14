@@ -1,5 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Server Action to create all Brevo fields -->
+    <record id="action_create_all_brevo_fields" model="ir.actions.server">
+        <field name="name">Create All Brevo Fields</field>
+        <field name="model_id" ref="model_brevo_config"/>
+        <field name="state">code</field>
+        <field name="code">
+# Get the first active Brevo configuration
+config = env['brevo.config'].search([('active', '=', True)], limit=1)
+if config:
+    result = config.create_all_brevo_fields()
+    if result:
+        action = result
+else:
+    action = {
+        'type': 'ir.actions.client',
+        'tag': 'display_notification',
+        'params': {
+            'title': 'Error',
+            'message': 'No active Brevo configuration found',
+            'type': 'danger',
+        }
+    }
+        </field>
+    </record>
+
     <!-- Brevo Field Discovery Views -->
     <record id="view_brevo_field_discovery_tree" model="ir.ui.view">
         <field name="name">brevo.field.discovery.tree</field>
@@ -101,31 +126,6 @@
             </p><p>
                 Use the "Discover Fields" button in the Brevo Configuration to automatically discover all available field combinations between Brevo and Odoo.
             </p>
-        </field>
-    </record>
-
-    <!-- Server Action to create all Brevo fields -->
-    <record id="action_create_all_brevo_fields" model="ir.actions.server">
-        <field name="name">Create All Brevo Fields</field>
-        <field name="model_id" ref="model_brevo_config"/>
-        <field name="state">code</field>
-        <field name="code">
-# Get the first active Brevo configuration
-config = env['brevo.config'].search([('active', '=', True)], limit=1)
-if config:
-    result = config.create_all_brevo_fields()
-    if result:
-        action = result
-else:
-    action = {
-        'type': 'ir.actions.client',
-        'tag': 'display_notification',
-        'params': {
-            'title': 'Error',
-            'message': 'No active Brevo configuration found',
-            'type': 'danger',
-        }
-    }
         </field>
     </record>
 
