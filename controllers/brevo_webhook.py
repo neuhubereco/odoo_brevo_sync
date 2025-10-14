@@ -103,6 +103,8 @@ class BrevoWebhookController(http.Controller):
                 _logger.warning("Brevo booking signature verification failed")
                 return {'status': 'error', 'message': 'Invalid signature'}
             data = json.loads(raw.decode('utf-8'))
+            # Ensure env user is public for anonymous calls
+            request.env = request.env(user=request.env.ref('base.public_user').id)
             result = self._handle_booking_webhook(data.get('event') or 'booking.created', data.get('data') or data)
             return {'status': 'success' if result.get('success') else 'error', 'message': result.get('message') or result.get('error')}
         except Exception as e:
@@ -123,6 +125,7 @@ class BrevoWebhookController(http.Controller):
             except Exception:
                 payload = kwargs.get('payload') or request.params.get('payload')
                 data = json.loads(payload) if payload else {}
+            request.env = request.env(user=request.env.ref('base.public_user').id)
             result = self._handle_booking_webhook(data.get('event') or 'booking.created', data.get('data') or data)
             return request.make_json_response({'status': 'success' if result.get('success') else 'error', 'message': result.get('message') or result.get('error')}, status=200 if result.get('success') else 400)
         except Exception as e:
@@ -132,7 +135,7 @@ class BrevoWebhookController(http.Controller):
     def _verify_webhook_signature(self, raw_data):
         """Verify webhook signature from Brevo (optional). If brevo.webhook_require_signature is False or not set, skip verification."""
         try:
-            ICP = request.env['ir.config_parameter'].sudo().with_user(request.env.ref('base.public_user'))
+            ICP = request.env['ir.config_parameter'].sudo()
             require_sig = ICP.get_param('brevo.webhook_require_signature', default='0') in ('1', 'true', 'True', True)
             if not require_sig:
                 return True
